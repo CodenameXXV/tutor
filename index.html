@@ -28,155 +28,97 @@
     }
   </script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #faf5ef 0%, #f0ecf7 30%, #e0ecfa 70%, #faf5ef 100%); background-size: 400% 400%; animation: ambientShift 20s ease infinite; min-height: 100vh; }
-    .dark body, .dark { background: linear-gradient(135deg, #0b0b1a 0%, #14142b 30%, #1a1a2e 60%, #0f0f20 100%); animation: ambientShiftDark 20s ease infinite; }
-    body { color: #2d2b3a; }
-    .dark { color: #d1d5e6; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; margin: 0; }
 
-    /* ====== Ambient Background Animation ====== */
-    @keyframes ambientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes ambientShiftDark { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes floatIn { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-    @keyframes gentleFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-    @keyframes slideUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
-    @keyframes pulseGlow { 0%,100% { box-shadow: 0 8px 32px rgba(120,80,200,0.15); } 50% { box-shadow: 0 8px 48px rgba(120,80,200,0.25); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-    @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
-    @keyframes toastSlideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(40px); } }
-    @keyframes toastSlideIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
-    @keyframes toastFadeOut { 0% { opacity: 1; } 100% { opacity: 0; transform: translateX(40px); } }
-    @keyframes pageEnter { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
-    .page-enter { animation: pageEnter 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-    .animate-scale-in { animation: floatIn 0.3s ease both; }
-    body { transition: background 0.4s ease, color 0.4s ease; }
+    /* Glassmorphism */
+    .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); }
+    .glass-dark { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(30,41,59,0.6); border: 1px solid rgba(255,255,255,0.08); }
+    .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; transition: transform 0.3s, box-shadow 0.3s; }
+    .glass-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,123,255,0.12); }
+    .dark .glass-card { background: rgba(30,41,59,0.5); border-color: rgba(255,255,255,0.08); }
+    .dark .glass-card:hover { box-shadow: 0 20px 40px rgba(0,212,255,0.1); }
 
-    /* ====== Glassmorphism ====== */
-    /* ====== Floating Calendar Card ====== */
-    .cal-floating { background: rgba(255,255,255,0.55); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border: 1px solid rgba(255,255,255,0.5); border-radius: 32px; box-shadow: 0 8px 32px rgba(120,80,200,0.1), 0 2px 8px rgba(0,0,0,0.03); animation: floatIn 0.6s cubic-bezier(0.16,1,0.3,1) both, pulseGlow 4s ease-in-out infinite; overflow: hidden; }
-    .dark .cal-floating { background: rgba(20,20,43,0.6); border-color: rgba(255,255,255,0.06); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-    /* ====== Glass Cards ====== */
-    .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-    .glass-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(108,92,231,0.06); }
-    .dark .glass-card { background: rgba(20,20,43,0.4); border-color: rgba(255,255,255,0.04); }
-
-    /* ====== Floating Pills Navigation ====== */
-    .nav-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 500; color: rgba(45,43,58,0.5); transition: all 0.3s cubic-bezier(0.16,1,0.3,1); white-space: nowrap; background: transparent; border: none; cursor: pointer; }
-    .nav-pill:hover { color: rgba(45,43,58,0.8); background: rgba(255,255,255,0.3); }
-    .dark .nav-pill { color: rgba(209,213,230,0.4); }
-    .dark .nav-pill:hover { color: rgba(209,213,230,0.8); background: rgba(255,255,255,0.05); }
-    .nav-pill.active { color: #6c5ce7; background: rgba(108,92,231,0.12); }
-    .dark .nav-pill.active { color: #a78bfa; background: rgba(167,139,250,0.12); }
-
-    /* ====== Gradient ====== */
+    /* Gradient */
     .gradient-text { background: linear-gradient(135deg, #007BFF, #00D4FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .gradient-bg { background: linear-gradient(135deg, #6c5ce7, #a78bfa); }
-    .gradient-warm { background: linear-gradient(135deg, #f97316, #f59e0b); }
-    .gradient-cool { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
-    .gradient-rose { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+    .gradient-bg { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    .gradient-bg-hover:hover { background: linear-gradient(135deg, #0062cc, #00a9cc); }
 
-    /* ====== Compact Top Bar ====== */
-    .top-bar { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+    /* Sidebar */
+    .sidebar { width: 260px; transition: transform 0.3s ease, width 0.3s ease; }
+    .sidebar.collapsed { transform: translateX(-260px); }
+    @media (max-width: 768px) { .sidebar { position: fixed; z-index: 50; height: 100vh; transform: translateX(-260px); } .sidebar.open { transform: translateX(0); } }
 
-    /* ====== Scrollbar ====== */
-    ::-webkit-scrollbar { width: 5px; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     .dark ::-webkit-scrollbar-thumb { background: #475569; }
 
-    /* ====== Modal ====== */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    /* Modal overlay */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content { transform: scale(0.92) translateY(20px); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); max-height: 90vh; overflow-y: auto; background: rgba(255,255,255,0.7); backdrop-filter: blur(32px); border: 1px solid rgba(255,255,255,0.5); border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
-    .dark .modal-content { background: rgba(20,20,43,0.7); border-color: rgba(255,255,255,0.06); }
     .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+    .modal-content { transform: scale(0.95) translateY(10px); transition: transform 0.2s; max-height: 90vh; overflow-y: auto; }
 
-    /* ====== Toast ====== */
-    .toast-container { position: fixed; top: 80px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
-    .toast { padding: 14px 22px; border-radius: 16px; color: white; font-size: 14px; font-weight: 500; animation: toastSlideIn 0.4s cubic-bezier(0.16,1,0.3,1), toastFadeOut 0.3s ease 2.7s both; box-shadow: 0 8px 32px rgba(0,0,0,0.1); backdrop-filter: blur(12px); }
-    .toast-success { background: rgba(16,185,129,0.85); }
-    .toast-error { background: rgba(239,68,68,0.85); }
-    .toast-info { background: rgba(108,92,231,0.85); }
+    /* Toast */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: 12px; color: white; font-size: 14px; font-weight: 500; animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
+    .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .toast-info { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-    /* ====== Calendar ====== */
-    .cal-slot { min-height: 48px; border-bottom: 1px solid rgba(0,0,0,0.04); cursor: pointer; transition: background 0.15s; }
-    .cal-slot:hover { background: rgba(108,92,231,0.03); }
-    .dark .cal-slot { border-bottom-color: rgba(255,255,255,0.04); }
-    .dark .cal-slot:hover { background: rgba(167,139,250,0.03); }
-    .cal-time { font-size: 11px; font-weight: 600; color: rgba(45,43,58,0.3); letter-spacing: 0.5px; }
-    .dark .cal-time { color: rgba(209,213,230,0.3); }
-    .lesson-pill { padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); border: 1px solid transparent; }
-    .lesson-pill:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    /* Calendar */
+    .cal-slot { min-height: 36px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
+    .cal-slot:hover { background: rgba(0,123,255,0.05); }
+    .dark .cal-slot { border-bottom-color: #334155; }
+    .dark .cal-slot:hover { background: rgba(0,212,255,0.05); }
 
-    /* ====== Context Menu ====== */
-    .ctx-menu { position: fixed; z-index: 300; min-width: 200px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.4); padding: 6px; opacity: 0; transform: scale(0.92) translateY(-8px); transition: all 0.2s cubic-bezier(0.16,1,0.3,1); pointer-events: none; }
-    .ctx-menu.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
-    .ctx-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 14px; border-radius: 12px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.1s; }
-    .ctx-menu-item:hover { background: rgba(108,92,231,0.06); }
-    .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.06); }
-    .ctx-menu-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 4px 8px; }
-    .dark .ctx-menu { background: rgba(20,20,43,0.9); border-color: rgba(255,255,255,0.06); box-shadow: 0 10px 50px rgba(0,0,0,0.4); }
-    .dark .ctx-menu-item:hover { background: rgba(167,139,250,0.06); }
-    .dark .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.1); }
-    .dark .ctx-menu-divider { background: rgba(255,255,255,0.06); }
+    /* Lesson pill */
+    .lesson-pill { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: transform 0.15s; }
+    .lesson-pill:hover { transform: scale(1.02); }
 
-    /* ====== Status badges ====== */
-    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 100px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
-    .badge-scheduled { background: rgba(59,130,246,0.1); color: #3b82f6; }
-    .badge-completed { background: rgba(16,185,129,0.1); color: #10b981; }
-    .badge-cancelled { background: rgba(239,68,68,0.1); color: #ef4444; }
-    .badge-absent { background: rgba(245,158,11,0.1); color: #f59e0b; }
-    .badge-rescheduled { background: rgba(99,102,241,0.1); color: #6366f1; }
-    .dark .badge-scheduled { background: rgba(59,130,246,0.15); color: #93c5fd; }
-    .dark .badge-completed { background: rgba(16,185,129,0.15); color: #6ee7b7; }
-    .dark .badge-cancelled { background: rgba(239,68,68,0.15); color: #fca5a5; }
-    .dark .badge-absent { background: rgba(245,158,11,0.15); color: #fcd34d; }
-    .dark .badge-rescheduled { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+    /* Context menu */
+    .ctx-menu { position: fixed; z-index: 300; min-width: 200px; background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; padding: 6px; opacity: 0; transform: scale(0.95); transition: opacity 0.15s, transform 0.15s; pointer-events: none; }
+    .ctx-menu.active { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .ctx-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.1s; }
+    .ctx-menu-item:hover { background: #f1f5f9; }
+    .ctx-menu-item.text-red-500:hover { background: #fef2f2; }
+    .ctx-menu-divider { height: 1px; background: #e2e8f0; margin: 4px 8px; }
+    .dark .ctx-menu { background: #1e293b; border-color: #334155; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .dark .ctx-menu-item:hover { background: #334155; }
+    .dark .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.15); }
+    .dark .ctx-menu-divider { background: #334155; }
 
-    /* ====== FAB ====== */
-    .fab { position: fixed; bottom: 28px; right: 28px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 40; cursor: pointer; color: white; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 8px 28px rgba(108,92,231,0.3); }
-    .fab:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 12px 40px rgba(108,92,231,0.4); }
-    .fab:active { transform: scale(0.95); }
+    /* Status badges */
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge-scheduled { background: #dbeafe; color: #1d4ed8; }
+    .badge-completed { background: #d1fae5; color: #059669; }
+    .badge-cancelled { background: #fee2e2; color: #dc2626; }
+    .badge-absent { background: #fef3c7; color: #d97706; }
+    .badge-rescheduled { background: #e0e7ff; color: #4338ca; }
+    .dark .badge-scheduled { background: #1e3a5f; color: #93c5fd; }
+    .dark .badge-completed { background: #064e3b; color: #6ee7b7; }
+    .dark .badge-cancelled { background: #7f1d1d; color: #fca5a5; }
+    .dark .badge-absent { background: #78350f; color: #fcd34d; }
+    .dark .badge-rescheduled { background: #312e81; color: #a5b4fc; }
 
-    /* ====== Day cell in month view ====== */
-    .day-cell { min-height: 90px; border-bottom: 1px solid rgba(0,0,0,0.04); border-right: 1px solid rgba(0,0,0,0.04); cursor: pointer; transition: all 0.15s; padding: 4px; }
-    .day-cell:hover { background: rgba(108,92,231,0.02); }
-    .dark .day-cell { border-color: rgba(255,255,255,0.04); }
-    .dark .day-cell:hover { background: rgba(167,139,250,0.02); }
-    .day-cell.today { background: rgba(108,92,231,0.04); }
-    .dark .day-cell.today { background: rgba(167,139,250,0.04); }
-    .cal-month-grid > div:nth-child(7n) { border-right: none; }
+    /* FAB */
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 40; box-shadow: 0 4px 20px rgba(0,123,255,0.3); transition: transform 0.2s; }
+    .fab:hover { transform: scale(1.1); }
 
-    /* ====== Student card ====== */
-    .student-card { transition: all 0.25s cubic-bezier(0.16,1,0.3,1); background: rgba(255,255,255,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; }
-    .dark .student-card { background: rgba(20,20,43,0.4); border-color: rgba(255,255,255,0.06); }
-    .student-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.04); }
-
-    /* ====== Mobile nav drawer ====== */
-    .mobile-nav { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
-    .mobile-nav.open { pointer-events: auto; }
-    .mobile-nav-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; }
-    .mobile-nav.open .mobile-nav-backdrop { opacity: 1; }
-    .mobile-nav-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); padding: 24px; }
-    .dark .mobile-nav-panel { background: rgba(11,11,26,0.9); }
-    .mobile-nav.open .mobile-nav-panel { transform: translateX(0); }
-
-    /* ====== Utility ====== */
+    /* Print */
     @media print { .no-print { display: none !important; } }
-    .hover-lift { transition: transform 0.2s, box-shadow 0.2s; }
-    .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
 
-    /* Calendar month grid: remove right border on 7th column */
-    .cal-month-grid > div:nth-child(7n) { border-right: none; }
+    /* Transitions for sidebar links */
+    .nav-link { transition: background 0.15s, color 0.15s; }
+    .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.1), rgba(0,212,255,0.1)); color: #007BFF; font-weight: 600; }
+    .dark .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.2), rgba(0,212,255,0.2)); color: #00D4FF; }
   </style>
 </head>
-<body>
+<body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
   <div id="app"></div>
   <div id="modal-root"></div>
   <div class="toast-container" id="toast-container"></div>
@@ -882,7 +824,7 @@
     navigate(hash) { window.location.hash = hash; },
     start() {
       const handleRoute = () => {
-        const hash = window.location.hash.slice(1) || 'calendar';
+        const hash = window.location.hash.slice(1) || 'dashboard';
         const parts = hash.split('/');
         const base = parts[0];
         this.params = { id: parts[1] || null };
@@ -890,21 +832,10 @@
         const handler = this.routes[base] || this.routes['dashboard'];
         handler(this.params);
       };
-      window.addEventListener('hashchange', () => {
-        document.getElementById('mobile-nav')?.classList.remove('open');
-        handleRoute();
-      });
+      window.addEventListener('hashchange', handleRoute);
       handleRoute();
     }
   };
-
-  // Close user dropdown on outside click
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('user-menu');
-    if (menu && !e.target.closest('#user-menu') && !e.target.closest('[onclick*="user-menu"]')) {
-      menu.classList.add('hidden');
-    }
-  });
 
   // ==================== TOAST ====================
   const Toast = {
@@ -1053,93 +984,75 @@
     markAllRead() {
       store.getAll('notifications').forEach(n => store.update('notifications', n.id, { isRead: true }));
     }
-  };  // ==================== APP SHELL (Top Navigation) ====================
+  };  // ==================== APP SHELL (Sidebar + TopBar) ====================
   const AppShell = {
     render(content) {
       const notifs = NotificationEngine.getUnread();
       const s = getSettings();
-      const user = firebase.auth().currentUser;
-      const navItems = [
-        { hash: 'dashboard', icon: Icons.home, label: t('dashboard') },
-        { hash: 'students', icon: Icons.users, label: t('students') },
-        { hash: 'calendar', icon: Icons.calendar, label: t('calendar') },
-        { hash: 'payments', icon: Icons.dollar, label: t('payments') },
-        { hash: 'materials', icon: Icons.book, label: t('materialsTitle') },
-        { hash: 'settings', icon: Icons.settings, label: t('settingsTitle') }
-      ];
       document.getElementById('app').innerHTML = `
-      <div class="min-h-screen flex flex-col">
-        <!-- Top Navigation -->
-        <nav class="top-nav">
-          <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-            <div class="flex items-center gap-1">
-              <!-- Logo -->
-              <a href="#calendar" class="flex items-center gap-2 mr-4 py-1.5 px-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">
-                <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-8 h-8 rounded-xl">
-                <span class="text-base font-bold gradient-text hidden sm:inline">TutorPro</span>
+      <div class="flex h-screen overflow-hidden">
+        <!-- Mobile overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.add('hidden')"></div>
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex flex-col z-50">
+          <div class="p-5 flex items-center gap-3">
+            <a href="#" onclick="Router.navigate('dashboard');return false" class="flex items-center gap-2">
+            <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-9 h-9 rounded-xl">
+            <span class="text-lg font-bold gradient-text">TutorPro</span>
+          </a>
+          </div>
+          <nav class="flex-1 px-3 space-y-1">
+            ${[
+              { hash: 'dashboard', icon: Icons.home, label: t('dashboard') },
+              { hash: 'students', icon: Icons.users, label: t('students') },
+              { hash: 'calendar', icon: Icons.calendar, label: t('calendar') },
+              { hash: 'payments', icon: Icons.dollar, label: t('payments') },
+              { hash: 'materials', icon: Icons.book, label: t('materialsTitle') },
+              { hash: 'settings', icon: Icons.settings, label: t('settingsTitle') }
+            ].map(l => `
+              <a href="#${l.hash}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${Router.current === l.hash ? 'active' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}">
+                ${l.icon}<span>${l.label}</span>
               </a>
-              <!-- Desktop Nav -->
-              <div class="hidden md:flex items-center gap-0.5">
-                ${navItems.map(l =>
-                  `<a href="#${l.hash}" class="nav-pill ${Router.current === l.hash ? 'active' : ''}">${l.icon}<span>${l.label}</span></a>`
-                ).join('')}
-              </div>
-              <!-- Mobile hamburger -->
-              <button onclick="document.getElementById('mobile-nav').classList.add('open')" class="md:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">${Icons.menu}</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <!-- Search -->
-              <div class="relative hidden sm:block">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">${Icons.search}</span>
-                <input type="text" id="global-search" placeholder="${t('searchPlaceholder')}" class="pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 w-36 lg:w-48 transition-all focus:w-48 lg:focus:w-56" oninput="AppShell.handleSearch(this.value)">
-                <div id="search-results" class="absolute top-full right-0 mt-1.5 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 hidden z-50 max-h-64 overflow-y-auto"></div>
-              </div>
-              ${langSelector()}
-              <button onclick="toggleTheme()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">${s.theme === 'dark' ? Icons.sun : Icons.moon}</button>
-              <button onclick="AppShell.showNotifications()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 relative transition">
-                ${Icons.bell}
-                ${notifs.length > 0 ? `<span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">${notifs.length}</span>` : ''}
-              </button>
-              <!-- Avatar -->
-              <div class="relative group">
-                ${user && user.photoURL
-                  ? `<img src="${user.photoURL}" class="w-8 h-8 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary-500 transition-all" alt="avatar" onclick="document.getElementById('user-menu').classList.toggle('hidden')">`
-                  : `<div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-xs font-bold cursor-pointer" onclick="document.getElementById('user-menu').classList.toggle('hidden')">${(user?.displayName || 'T').charAt(0)}</div>`
+            `).join('')}
+          </nav>            <div class="p-4 border-t border-slate-100 dark:border-slate-700">
+              <div class="flex items-center gap-3">
+                ${firebase.auth().currentUser && firebase.auth().currentUser.photoURL
+                  ? `<img src="${firebase.auth().currentUser.photoURL}" class="w-9 h-9 rounded-full" alt="avatar">`
+                  : `<div class="w-9 h-9 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-bold">${(firebase.auth().currentUser?.displayName || 'T').charAt(0)}</div>`
                 }
-                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 px-1 z-50">
-                  <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700 mb-1">
-                    <div class="text-xs text-slate-400">${t('signedInAs')}</div>
-                    <div class="text-sm font-semibold truncate">${user?.displayName || s.name || t('tutor')}</div>
-                  </div>
-                  <button onclick="signOut()" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">${Icons.logout || '↩'} ${t('signOut')}</button>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs text-slate-400">${t('signedInAs')}</div>
+                  <div class="text-sm font-semibold truncate">${firebase.auth().currentUser?.displayName || s.name || t('tutor')}</div>
                 </div>
               </div>
+              <button onclick="signOut()" class="mt-2 w-full text-xs text-slate-400 hover:text-red-500 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">${Icons.logout || '↩'} ${t('signOut')}</button>
             </div>
-          </div>
-        </nav>
-        <!-- Page content -->
-        <main class="flex-1 overflow-y-auto" id="page-content">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 page-enter" id="page-wrapper">
+        </aside>
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <!-- TopBar -->
+          <header class="flex items-center justify-between px-4 md:px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg">
+            <div class="flex items-center gap-3">
+              <button onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('hidden')" class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">${Icons.menu}</button>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">${Icons.search}</span>
+                <input type="text" id="global-search" placeholder="${t('searchPlaceholder')}" class="pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-48 md:w-64" oninput="AppShell.handleSearch(this.value)">
+                <div id="search-results" class="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 hidden z-50 max-h-64 overflow-y-auto"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${langSelector()}
+              <button onclick="toggleTheme()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition">${s.theme === 'dark' ? Icons.sun : Icons.moon}</button>
+              <button onclick="AppShell.showNotifications()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 relative transition">
+                ${Icons.bell}
+                ${notifs.length > 0 ? `<span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">${notifs.length}</span>` : ''}
+              </button>
+            </div>
+          </header>
+          <!-- Page content -->
+          <main class="flex-1 overflow-y-auto p-4 md:p-6" id="page-content">
             ${content}
-          </div>
-        </main>
-      </div>
-      <!-- Mobile Nav Drawer -->
-      <div id="mobile-nav" class="mobile-nav" onclick="if(event.target === this || event.target.classList.contains('mobile-nav-backdrop')) this.classList.remove('open')">
-        <div class="mobile-nav-backdrop"></div>
-        <div class="mobile-nav-panel">
-          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
-            <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-10 h-10 rounded-xl">
-            <div>
-              <div class="font-bold gradient-text">TutorPro</div>
-              <div class="text-xs text-slate-400">${user?.displayName || t('tutor')}</div>
-            </div>
-          </div>
-          <div class="space-y-1">
-            ${navItems.map(l =>
-              `<a href="#${l.hash}" onclick="document.getElementById('mobile-nav').classList.remove('open')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${Router.current === l.hash ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-500 font-semibold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}">${l.icon}<span>${l.label}</span></a>`
-            ).join('')}
-          </div>
+          </main>
         </div>
       </div>`;
     },
@@ -1728,36 +1641,31 @@
     render() {
       const lessons = store.getAll('lessons');
       const students = store.getAll('students');
-      const monthName = this.currentDate.toLocaleString(getLang()==='uk'?'uk':getLang()==='ru'?'ru':getLang()==='de'?'de':getLang()==='pl'?'pl':'en', { month: 'long', year: 'numeric' });
       const content = `
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl gradient-bg flex items-center justify-center text-white shadow-lg shadow-primary-500/20">${Icons.calendar}</div>
-            <div>
-              <h1 class="text-xl font-bold">${t('calendar')}</h1>
-              <p class="text-xs text-slate-400">${monthName}</p>
-            </div>
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">${t('calendar')}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${this.currentDate.toLocaleString(getLang()==='uk'?'uk':'en', { month: 'long', year: 'numeric' })}</p>
           </div>
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5">
-              ${['day','week','month'].map(m => `<button onclick="CalendarView.viewMode='${m}';CalendarView.render()" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${this.viewMode === m ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-500 dark:text-accent-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}">${m === 'day' ? t('day') : m === 'week' ? t('week') : t('month')}</button>`).join('')}
-            </div>
-            <div class="flex items-center gap-1 ml-1">
-              <button onclick="CalendarView.navigate(-1)" class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition">${Icons.chevronLeft}</button>
-              <button onclick="CalendarView.currentDate=new Date();CalendarView.render()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition">${t('today')}</button>
-              <button onclick="CalendarView.navigate(1)" class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition">${Icons.chevronRight}</button>
+          <div class="flex items-center gap-2">
+            <button onclick="CalendarView.navigate(-1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.chevronLeft}</button>
+            <button onclick="CalendarView.currentDate=new Date();CalendarView.render()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">${t('today')}</button>
+            <button onclick="CalendarView.navigate(1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.chevronRight}</button>
+            <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 ml-2">
+              ${['day','week','month'].map(m => `<button onclick="CalendarView.viewMode='${m}';CalendarView.render()" class="px-3 py-1 rounded-lg text-xs font-medium ${this.viewMode === m ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}">${m === 'day' ? t('day') : m === 'week' ? t('week') : t('month')}</button>`).join('')}
             </div>
           </div>
         </div>
-        <div class="cal-floating">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
           ${this.viewMode === 'day' ? this.renderDay(lessons, students) : this.viewMode === 'week' ? this.renderWeek(lessons, students) : this.renderMonth(lessons, students)}
         </div>
-        <button onclick="CalendarView.openForm()" class="fab gradient-bg">${Icons.plus}</button>`;
+        <button onclick="CalendarView.openForm()" class="fab gradient-bg text-white">${Icons.plus}</button>`;
       AppShell.render(content);
     },
     renderWeek(lessons, students) {
       const startOfWeek = new Date(this.currentDate);
       startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+      // Dynamic hour range based on lessons
       const weekEnd = new Date(startOfWeek); weekEnd.setDate(startOfWeek.getDate() + 6);
       const weekLessonsAll = lessons.filter(l => { const d = new Date(l.startAt); return d >= startOfWeek && d <= weekEnd; });
       let minH = 8, maxH = 21;
@@ -1767,25 +1675,22 @@
         maxH = Math.min(22, Math.max(...hrs) + 2);
       }
       const hours = Array.from({length: maxH - minH}, (_, i) => i + minH);
-      const lang = getLang();
-      let html = '<div class="overflow-x-auto"><div class="min-w-[650px]">';
-      // Day headers
+      let html = '<div class="overflow-x-auto"><div class="min-w-[700px]">';
       html += '<div class="grid grid-cols-8 border-b border-slate-100 dark:border-slate-700">';
-      html += '<div class="p-2"></div>';
+      html += '<div class="p-2 text-xs text-slate-400"></div>';
       for (let d = 0; d < 7; d++) {
         const day = new Date(startOfWeek);
         day.setDate(startOfWeek.getDate() + d);
         const today = isToday(day);
         html += `<div class="p-2 text-center border-l border-slate-100 dark:border-slate-700 ${today ? 'bg-primary-50 dark:bg-primary-900/20' : ''}">
-          <div class="text-xs font-medium ${today ? 'text-primary-500' : 'text-slate-400'}">${day.toLocaleDateString(lang, {weekday:'short'})}</div>
-          <div class="text-xl font-bold ${today ? 'text-primary-500' : 'text-slate-700 dark:text-slate-300'}">${day.getDate()}</div>
+          <div class="text-xs text-slate-400">${day.toLocaleDateString(getLang(), {weekday:'short'})}</div>
+          <div class="text-lg font-bold ${today ? 'text-primary-500' : ''}">${day.getDate()}</div>
         </div>`;
       }
       html += '</div>';
-      // Time slots
       hours.forEach(h => {
-        html += `<div class="grid grid-cols-8 border-b border-slate-50 dark:border-slate-700/30">`;
-        html += `<div class="cal-time p-2 text-right pr-2 flex items-start justify-end pt-2">${String(h).padStart(2,'0')}:00</div>`;
+        html += `<div class="grid grid-cols-8 border-b border-slate-50 dark:border-slate-700/50">`;
+        html += `<div class="p-2 text-xs text-slate-400 text-right pr-3">${String(h).padStart(2,'0')}:00</div>`;
         for (let d = 0; d < 7; d++) {
           const day = new Date(startOfWeek);
           day.setDate(startOfWeek.getDate() + d);
@@ -1795,9 +1700,9 @@
           html += `<div class="cal-slot border-l border-slate-100 dark:border-slate-700 p-1 relative ${today ? 'bg-primary-50/30 dark:bg-primary-900/10' : ''}" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
           dayLessons.forEach(l => {
             const st = students.find(s => s.id === l.studentId);
-            const statusColors = { scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800', completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800', cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800 line-through opacity-60', absent: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800', rescheduled: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' };
+            const colors = { scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', absent: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', rescheduled: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' };
             const payDue = needsPayment(st, l);
-            html += `<div class="lesson-pill relative border ${statusColors[l.status] || statusColors.scheduled} truncate mb-0.5 ${payDue ? 'ring-2 ring-red-400 dark:ring-red-500' : ''}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>`;
+            html += `<div class="lesson-pill relative ${colors[l.status] || colors.scheduled} truncate mb-0.5 ${payDue ? 'ring-2 ring-red-400 dark:ring-red-500' : ''}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>`;
           });
           html += '</div>';
         }
@@ -1808,6 +1713,7 @@
     },
     renderDay(lessons, students) {
       const day = new Date(this.currentDate);
+      // Dynamic hour range based on lessons
       const dayLessonsAll = lessons.filter(l => new Date(l.startAt).toDateString() === day.toDateString());
       let minH = 8, maxH = 21;
       if (dayLessonsAll.length) {
@@ -1816,31 +1722,22 @@
         maxH = Math.min(22, Math.max(...hrs) + 2);
       }
       const hours = Array.from({length: maxH - minH}, (_, i) => i + minH);
-      const todayStr = day.toLocaleDateString(getLang(), { weekday: 'long', month: 'long', day: 'numeric' });
-      let html = `<div class="px-3 py-2 text-xs font-medium text-slate-400 border-b border-slate-100 dark:border-slate-700">${todayStr}</div>`;
-      html += '<div class="divide-y divide-slate-50 dark:divide-slate-700/30">';
+      let html = '<div class="divide-y divide-slate-50 dark:divide-slate-700/50">';
       hours.forEach(h => {
         const dayLessons = lessons.filter(l => { const ld = new Date(l.startAt); return ld.toDateString() === day.toDateString() && ld.getHours() === h; });
-        const hasLessons = dayLessons.length > 0;
-        html += `<div class="flex gap-3 min-h-[52px] hover:bg-slate-50 dark:hover:bg-slate-700/20 transition cursor-pointer p-2" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
-        html += `<div class="w-14 text-xs font-semibold text-slate-400 text-right pt-1 flex-shrink-0">${String(h).padStart(2,'0')}:00</div>`;
-        html += `<div class="flex-1">`;
-        if (hasLessons) {
-          dayLessons.forEach(l => {
-            const st = students.find(s => s.id === l.studentId);
-            const payDue = needsPayment(st, l);
-            html += `<div class="${payDue ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800' : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'} rounded-2xl p-3 mb-1.5 cursor-pointer border hover:shadow-md transition-all" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">
-              <div class="flex items-center justify-between mb-0.5">
-                <div class="font-semibold text-sm flex items-center gap-1.5">${st ? `<span class="w-5 h-5 rounded-full gradient-bg text-white text-[10px] flex items-center justify-center font-bold">${st.name.charAt(0)}</span>` : ''} ${st ? st.name : t('lesson')}${payDue ? ' 💵' : ''}</div>
-                <span class="badge badge-${l.status} text-[10px]">${t(l.status)}</span>
-              </div>
-              <div class="text-xs text-slate-400 ml-7">${formatTime(l.startAt)} - ${formatTime(l.endAt)}${l.title ? ` · ${l.title}` : ''}</div>
-              ${payDue ? `<div class="text-[10px] text-red-500 font-medium mt-1 ml-7">⚠️ ${t('paymentDue')}</div>` : ''}
-            </div>`;
-          });
-        } else {
-          html += `<div class="text-xs text-slate-300 dark:text-slate-600 pt-1">${t('newLesson')}...</div>`;
-        }
+        html += `<div class="flex gap-3 p-2 min-h-[40px] hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">`;
+        html += `<div class="w-14 text-xs text-slate-400 text-right pt-0.5 flex-shrink-0">${String(h).padStart(2,'0')}:00</div>`;
+        html += `<div class="flex-1 cursor-pointer" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
+        dayLessons.forEach(l => {
+          const st = students.find(s => s.id === l.studentId);
+          const payDue = needsPayment(st, l);
+          html += `<div class="${payDue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'} rounded-xl p-3 mb-1 cursor-pointer border" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">
+            <div class="font-semibold text-sm flex items-center gap-1">${payDue ? '💵' : ''} ${st ? st.name : t('lesson')}</div>
+            <div class="text-xs text-slate-400">${formatTime(l.startAt)} - ${formatTime(l.endAt)} · <span class="badge badge-${l.status}">${l.status}</span></div>
+            ${l.title ? `<div class="text-xs mt-1">${l.title}</div>` : ''}
+            ${payDue ? `<div class="text-[10px] text-red-500 font-medium mt-1">${t('paymentDue')}</div>` : ''}
+          </div>`;
+        });
         html += '</div></div>';
       });
       html += '</div>';
@@ -1852,28 +1749,21 @@
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
       const startPad = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-      const lang = getLang();
-      let html = '<div class="grid grid-cols-7 cal-month-grid">';
-      [t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')].forEach((d, i) => { html += `<div class="p-2 text-xs font-semibold ${i >= 5 ? 'text-primary-400' : 'text-slate-400'} text-center border-b border-slate-100 dark:border-slate-700">${d}</div>`; });
-      for (let i = 0; i < startPad; i++) html += '<div class="day-cell bg-slate-50/30 dark:bg-slate-800/20"></div>';
+      let html = '<div class="grid grid-cols-7">';
+      [t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')].forEach(d => { html += `<div class="p-1.5 text-xs font-semibold text-slate-400 text-center border-b border-slate-100 dark:border-slate-700">${d}</div>`; });
+      for (let i = 0; i < startPad; i++) html += '<div class="p-1 min-h-[56px] border-b border-r border-slate-50 dark:border-slate-700/50"></div>';
       for (let d = 1; d <= lastDay.getDate(); d++) {
         const date = new Date(year, month, d);
         const today = isToday(date);
         const dayLessons = lessons.filter(l => new Date(l.startAt).toDateString() === date.toDateString());
-        html += `<div class="day-cell relative ${today ? 'today' : ''}" onclick="CalendarView.currentDate=new Date(${year},${month},${d});CalendarView.viewMode='day';CalendarView.render()">
-          <div class="flex items-center justify-center w-6 h-6 mt-1 ml-1 rounded-full text-xs font-semibold ${today ? 'gradient-bg text-white' : 'text-slate-600 dark:text-slate-300'}">${d}</div>
-          <div class="px-1 space-y-0.5 mt-0.5">
-          ${dayLessons.slice(0,3).map(l => {
+        html += `<div class="p-1.5 min-h-[56px] border-b border-r border-slate-50 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 ${today ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''}" onclick="CalendarView.currentDate=new Date(${year},${month},${d});CalendarView.viewMode='day';CalendarView.render()">
+          <div class="text-xs font-semibold ${today ? 'text-primary-500' : ''}">${d}</div>
+          ${dayLessons.slice(0,2).map(l => {
             const st = students.find(s => s.id === l.studentId);
             const payDue = needsPayment(st, l);
-            const statusDots = { scheduled: 'bg-blue-400', completed: 'bg-green-400', cancelled: 'bg-red-300', absent: 'bg-amber-400', rescheduled: 'bg-indigo-400' };
-            return `<div class="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">
-              <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDots[l.status] || 'bg-slate-300'} ${payDue ? 'ring-1 ring-red-400' : ''}"></span>
-              <span class="text-[10px] truncate ${payDue ? 'text-red-500 font-medium' : 'text-slate-600 dark:text-slate-300'}">${payDue ? '💵' : ''}${formatTime(l.startAt)}</span>
-            </div>`;
+            return `<div class="lesson-pill relative ${payDue ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 ring-1 ring-red-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'} truncate mt-0.5 text-[10px]" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
           }).join('')}
-          </div>
-          ${dayLessons.length > 3 ? `<div class="absolute bottom-1 right-1.5 text-[9px] font-medium text-slate-400 bg-white/80 dark:bg-slate-800/80 px-1 rounded">+${dayLessons.length-3}</div>` : ''}
+          ${dayLessons.length > 2 ? `<div class="text-[10px] text-slate-400 mt-0.5">+${dayLessons.length-2} ${t('moreLessons')}</div>` : ''}
         </div>`;
       }
       html += '</div>';
