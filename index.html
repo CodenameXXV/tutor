@@ -170,7 +170,7 @@
       name: 'Name', phone: 'Phone', email: 'Email', telegram: 'Telegram',
       level: 'Level', pricePerLesson: 'Price per lesson', dateOfBirth: 'Date of Birth',
       learningGoal: 'Learning Goal', notes: 'Notes', select: 'Select...',
-      beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced',
+      a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Update', add: 'Add', cancel: 'Cancel', save: 'Save',
       noLevel: 'No level', studentAdded: 'Student added', studentUpdated: 'Student updated', studentDeleted: 'Student deleted',
       deleteConfirm: 'Delete this student? This cannot be undone.',
@@ -253,7 +253,7 @@
       name: "Ім'я", phone: 'Телефон', email: 'Пошта', telegram: 'Телеграм',
       level: 'Рівень', pricePerLesson: 'Вартість уроку', dateOfBirth: 'Дата народження',
       learningGoal: 'Мета навчання', notes: 'Нотатки', select: 'Оберіть...',
-      beginner: 'Початковий', intermediate: 'Середній', advanced: 'Просунутий',
+      a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Оновити', add: 'Додати', cancel: 'Скасувати', save: 'Зберегти',
       noLevel: 'Без рівня', studentAdded: 'Учня додано', studentUpdated: 'Учня оновлено', studentDeleted: 'Учня видалено',
       deleteConfirm: 'Видалити цього учня? Це незворотна дія.',
@@ -336,7 +336,7 @@
       name: 'Имя', phone: 'Телефон', email: 'Почта', telegram: 'Телеграм',
       level: 'Уровень', pricePerLesson: 'Стоимость урока', dateOfBirth: 'Дата рождения',
       learningGoal: 'Цель обучения', notes: 'Заметки', select: 'Выберите...',
-      beginner: 'Начальный', intermediate: 'Средний', advanced: 'Продвинутый',
+      a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Обновить', add: 'Добавить', cancel: 'Отмена', save: 'Сохранить',
       noLevel: 'Без уровня', studentAdded: 'Ученик добавлен', studentUpdated: 'Ученик обновлён', studentDeleted: 'Ученик удалён',
       deleteConfirm: 'Удалить этого ученика? Это необратимое действие.',
@@ -419,7 +419,7 @@
       name: 'Name', phone: 'Telefon', email: 'E-Mail', telegram: 'Telegram',
       level: 'Niveau', pricePerLesson: 'Preis pro Unterricht', dateOfBirth: 'Geburtsdatum',
       learningGoal: 'Lernziel', notes: 'Notizen', select: 'Auswählen...',
-      beginner: 'Anfänger', intermediate: 'Mittelstufe', advanced: 'Fortgeschritten',
+      a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Aktualisieren', add: 'Hinzufügen', cancel: 'Abbrechen', save: 'Speichern',
       noLevel: 'Kein Niveau', studentAdded: 'Schüler hinzugefügt', studentUpdated: 'Schüler aktualisiert', studentDeleted: 'Schüler gelöscht',
       deleteConfirm: 'Diesen Schüler löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
@@ -502,7 +502,7 @@
       name: 'Imię', phone: 'Telefon', email: 'E-mail', telegram: 'Telegram',
       level: 'Poziom', pricePerLesson: 'Cena za lekcję', dateOfBirth: 'Data urodzenia',
       learningGoal: 'Cel nauki', notes: 'Notatki', select: 'Wybierz...',
-      beginner: 'Początkujący', intermediate: 'Średniozaawansowany', advanced: 'Zaawansowany',
+      a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Aktualizuj', add: 'Dodaj', cancel: 'Anuluj', save: 'Zapisz',
       noLevel: 'Brak poziomu', studentAdded: 'Ucznia dodano', studentUpdated: 'Ucznia zaktualizowano', studentDeleted: 'Ucznia usunięto',
       deleteConfirm: 'Usunąć tego ucznia? Tej czynności nie można cofnąć.',
@@ -1265,7 +1265,7 @@
             <div><label class="text-xs font-semibold text-slate-500">${t('email')}</label><input name="email" type="email" value="${s ? s.email || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
           </div>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-xs font-semibold text-slate-500">${t('level')}</label><select name="level" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"><option value="" ${s && !s.level ? 'selected' : ''}>${t('select')}</option><option value="beginner" ${s && s.level === 'beginner' ? 'selected' : ''}>${t('beginner')}</option><option value="intermediate" ${s && s.level === 'intermediate' ? 'selected' : ''}>${t('intermediate')}</option><option value="advanced" ${s && s.level === 'advanced' ? 'selected' : ''}>${t('advanced')}</option></select></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('level')}</label><select name="level" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"><option value="" ${s && !s.level ? 'selected' : ''}>${t('select')}</option><option value="A1" ${s && s.level === 'A1' ? 'selected' : ''}>A1</option><option value="A2" ${s && s.level === 'A2' ? 'selected' : ''}>A2</option><option value="B1" ${s && s.level === 'B1' ? 'selected' : ''}>B1</option><option value="B2" ${s && s.level === 'B2' ? 'selected' : ''}>B2</option><option value="C1" ${s && s.level === 'C1' ? 'selected' : ''}>C1</option><option value="C2" ${s && s.level === 'C2' ? 'selected' : ''}>C2</option></select></div>
             <div><label class="text-xs font-semibold text-slate-500">${t('pricePerLesson')}</label><input name="pricePerLesson" type="number" min="0" value="${s ? s.pricePerLesson || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -1300,7 +1300,7 @@
     },
     deleteStudent(id) {
       ConfirmModal.show(t('deleteConfirm')).then(ok => {
-        if (ok) { store.delete('students', id); Toast.success(t('studentDeleted')); Router.navigate('students'); }
+        if (ok) { store.delete('students', id); Toast.success(t('studentDeleted')); StudentsView.render(); }
       });
     }
   };
@@ -1475,7 +1475,7 @@
         day.setDate(startOfWeek.getDate() + d);
         const today = isToday(day);
         html += `<div class="p-2 text-center border-l border-slate-100 dark:border-slate-700 ${today ? 'bg-primary-50 dark:bg-primary-900/20' : ''}">
-          <div class="text-xs text-slate-400">${day.toLocaleDateString('en', {weekday:'short'})}</div>
+          <div class="text-xs text-slate-400">${day.toLocaleDateString(getLang(), {weekday:'short'})}</div>
           <div class="text-lg font-bold ${today ? 'text-primary-500' : ''}">${day.getDate()}</div>
         </div>`;
       }
