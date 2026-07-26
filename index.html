@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" type="image/png">
   <title>TutorPro — Tutor Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -78,6 +79,18 @@
     /* Lesson pill */
     .lesson-pill { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: transform 0.15s; }
     .lesson-pill:hover { transform: scale(1.02); }
+
+    /* Context menu */
+    .ctx-menu { position: fixed; z-index: 300; min-width: 200px; background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; padding: 6px; opacity: 0; transform: scale(0.95); transition: opacity 0.15s, transform 0.15s; pointer-events: none; }
+    .ctx-menu.active { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .ctx-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.1s; }
+    .ctx-menu-item:hover { background: #f1f5f9; }
+    .ctx-menu-item.text-red-500:hover { background: #fef2f2; }
+    .ctx-menu-divider { height: 1px; background: #e2e8f0; margin: 4px 8px; }
+    .dark .ctx-menu { background: #1e293b; border-color: #334155; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .dark .ctx-menu-item:hover { background: #334155; }
+    .dark .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.15); }
+    .dark .ctx-menu-divider { background: #334155; }
 
     /* Status badges */
     .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
@@ -214,6 +227,7 @@
       repeatWeekly: 'Repeat weekly for', times: 'times', linkToPackage: 'Link to Package', none: 'None',
       homework: 'Homework', createLesson: 'Create Lesson', updateLesson: 'Update Lesson',
       deleteLesson: 'Delete Lesson', deleteLessonConfirm: 'Delete this lesson?', deleteThisLesson: 'Delete this lesson only', deleteAllWeekly: 'Delete all weekly lessons (same time/weekday)',
+      cancelLessonAction: 'Cancel Lesson', lessonCancelled: 'Lesson cancelled',
       lessonCreated: 'Lesson created', lessonsCreated: 'lessons created', lessonUpdated: 'Lesson updated', lessonDeleted: 'Lesson deleted',
       lessonTopic: 'Lesson topic',
       // Payments
@@ -299,6 +313,7 @@
       repeatWeekly: 'Повторювати щотижня', times: 'разів', linkToPackage: "Прив'язати до пакету", none: 'Немає',
       homework: 'Домашнє завдання', createLesson: 'Створити урок', updateLesson: 'Оновити урок',
       deleteLesson: 'Видалити урок', deleteLessonConfirm: 'Видалити цей урок?', deleteThisLesson: 'Видалити тільки цей урок', deleteAllWeekly: 'Видалити всі щотижневі (той же час/день)',
+      cancelLessonAction: 'Скасувати урок', lessonCancelled: 'Урок скасовано',
       lessonCreated: 'Урок створено', lessonsCreated: 'уроків створено', lessonUpdated: 'Урок оновлено', lessonDeleted: 'Урок видалено',
       lessonTopic: 'Тема уроку',
       // Payments
@@ -384,6 +399,7 @@
       repeatWeekly: 'Повторять еженедельно', times: 'раз', linkToPackage: 'Привязать к пакету', none: 'Нет',
       homework: 'Домашнее задание', createLesson: 'Создать урок', updateLesson: 'Обновить урок',
       deleteLesson: 'Удалить урок', deleteLessonConfirm: 'Удалить этот урок?', deleteThisLesson: 'Удалить только этот урок', deleteAllWeekly: 'Удалить все еженедельные (то же время/день)',
+      cancelLessonAction: 'Отменить урок', lessonCancelled: 'Урок отменён',
       lessonCreated: 'Урок создан', lessonsCreated: 'уроков создано', lessonUpdated: 'Урок обновлён', lessonDeleted: 'Урок удалён',
       lessonTopic: 'Тема урока',
       // Payments
@@ -469,6 +485,7 @@
       repeatWeekly: 'Wöchentlich wiederholen', times: 'Mal', linkToPackage: 'Mit Paket verknüpfen', none: 'Keine',
       homework: 'Hausaufgaben', createLesson: 'Unterricht erstellen', updateLesson: 'Unterricht aktualisieren',
       deleteLesson: 'Unterricht löschen', deleteLessonConfirm: 'Diesen Unterricht löschen?', deleteThisLesson: 'Nur diesen Unterricht löschen', deleteAllWeekly: 'Alle wöchentlichen löschen (gleiche Zeit/Wochentag)',
+      cancelLessonAction: 'Unterricht stornieren', lessonCancelled: 'Unterricht storniert',
       lessonCreated: 'Unterricht erstellt', lessonsCreated: 'Unterrichte erstellt', lessonUpdated: 'Unterricht aktualisiert', lessonDeleted: 'Unterricht gelöscht',
       lessonTopic: 'Unterrichtsthema',
       // Payments
@@ -554,6 +571,7 @@
       repeatWeekly: 'Powtarzaj co tydzień', times: 'razy', linkToPackage: 'Połącz z pakietem', none: 'Brak',
       homework: 'Zadanie domowe', createLesson: 'Utwórz lekcję', updateLesson: 'Aktualizuj lekcję',
       deleteLesson: 'Usuń lekcję', deleteLessonConfirm: 'Usunąć tę lekcję?', deleteThisLesson: 'Usuń tylko tę lekcję', deleteAllWeekly: 'Usuń wszystkie tygodniowe (ten sam czas/dzień)',
+      cancelLessonAction: 'Anuluj lekcję', lessonCancelled: 'Lekcja anulowana',
       lessonCreated: 'Lekcja utworzona', lessonsCreated: 'lekcji utworzonych', lessonUpdated: 'Lekcja zaktualizowana', lessonDeleted: 'Lekcja usunięta',
       lessonTopic: 'Temat lekcji',
       // Payments
@@ -953,8 +971,10 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex flex-col z-50">
           <div class="p-5 flex items-center gap-3">
-            <div class="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-white font-bold">T</div>
+            <a href="#" onclick="Router.navigate('dashboard');return false" class="flex items-center gap-2">
+            <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-9 h-9 rounded-xl">
             <span class="text-lg font-bold gradient-text">TutorPro</span>
+          </a>
           </div>
           <nav class="flex-1 px-3 space-y-1">
             ${[
@@ -1069,7 +1089,7 @@
           <div class="absolute w-80 h-80 bg-accent-500/10 rounded-full blur-3xl -bottom-20 -left-20"></div>
         </div>
         <div class="glass-card max-w-md w-full p-10 text-center relative z-10">
-          <div class="w-16 h-16 mx-auto gradient-bg rounded-2xl flex items-center justify-center text-white text-2xl font-bold mb-6">T</div>
+          <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-16 h-16 mx-auto mb-6 rounded-2xl">
           <h1 class="text-2xl font-extrabold mb-2 gradient-text">TutorPro</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">${t('signInSub')}</p>
           <button onclick="LoginView.signInWithGoogle()" class="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 transition font-medium text-sm">
@@ -1558,7 +1578,7 @@
             const st = students.find(s => s.id === l.studentId);
             const colors = { scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', absent: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', rescheduled: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' };
             const payDue = needsPayment(st, l);
-            html += `<div class="lesson-pill relative ${colors[l.status] || colors.scheduled} truncate mb-0.5 ${payDue ? 'ring-2 ring-red-400 dark:ring-red-500' : ''}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>`;
+            html += `<div class="lesson-pill relative ${colors[l.status] || colors.scheduled} truncate mb-0.5 ${payDue ? 'ring-2 ring-red-400 dark:ring-red-500' : ''}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>`;
           });
           html += '</div>';
         }
@@ -1587,7 +1607,7 @@
         dayLessons.forEach(l => {
           const st = students.find(s => s.id === l.studentId);
           const payDue = needsPayment(st, l);
-          html += `<div class="${payDue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'} rounded-xl p-3 mb-1 cursor-pointer border" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">
+          html += `<div class="${payDue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'} rounded-xl p-3 mb-1 cursor-pointer border" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">
             <div class="font-semibold text-sm flex items-center gap-1">${payDue ? '💵' : ''} ${st ? st.name : t('lesson')}</div>
             <div class="text-xs text-slate-400">${formatTime(l.startAt)} - ${formatTime(l.endAt)} · <span class="badge badge-${l.status}">${l.status}</span></div>
             ${l.title ? `<div class="text-xs mt-1">${l.title}</div>` : ''}
@@ -1617,7 +1637,7 @@
           ${dayLessons.slice(0,2).map(l => {
             const st = students.find(s => s.id === l.studentId);
             const payDue = needsPayment(st, l);
-            return `<div class="lesson-pill relative ${payDue ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 ring-1 ring-red-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'} truncate mt-0.5 text-[10px]" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${payDue ? '💵 ' : ''}${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
+            return `<div class="lesson-pill relative ${payDue ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 ring-1 ring-red-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'} truncate mt-0.5 text-[10px]" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
           }).join('')}
           ${dayLessons.length > 2 ? `<div class="text-[10px] text-slate-400 mt-0.5">+${dayLessons.length-2} ${t('moreLessons')}</div>` : ''}
         </div>`;
@@ -1790,10 +1810,51 @@
       Toast.success(t('lessonDeleted'));
       Modal.close();
       this.render();
+    },
+    showContextMenu(id, e) {
+      // Remove existing menu
+      const old = document.getElementById('ctx-menu');
+      if (old) old.remove();
+      const ctx = document.createElement('div');
+      ctx.id = 'ctx-menu';
+      ctx.className = 'ctx-menu active';
+      ctx.style.left = Math.min(e.clientX, window.innerWidth - 220) + 'px';
+      ctx.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+      const lesson = store.getById('lessons', id);
+      const st = lesson ? store.getById('students', lesson.studentId) : null;
+      const header = lesson && st ? `<div class="px-3 py-1.5 text-xs text-slate-400 font-medium border-b border-slate-100 dark:border-slate-700 mb-1">${st.name} · ${formatTime(lesson.startAt)}</div>` : '';
+      const isCompleted = lesson && lesson.status === 'completed';
+      ctx.innerHTML = `
+        ${header}
+        <button class="ctx-menu-item" onclick="CalendarView.openForm('${id}');document.getElementById('ctx-menu')?.remove()">✏️ ${t('editLesson')}</button>
+        ${isCompleted ? `<button class="ctx-menu-item" onclick="CalendarView.markAsPaid('${id}');document.getElementById('ctx-menu')?.remove()">💵 ${t('markAsPaid')}</button>` : ''}
+        ${!isCompleted ? `<button class="ctx-menu-item" onclick="CalendarView.cancelLesson('${id}');document.getElementById('ctx-menu')?.remove()">❌ ${t('cancelLessonAction')}</button>` : ''}
+        <div class="ctx-menu-divider"></div>
+        <button class="ctx-menu-item text-red-500" onclick="CalendarView.deleteLesson('${id}');document.getElementById('ctx-menu')?.remove()">🗑 ${t('deleteLesson')}</button>
+      `;
+      document.body.appendChild(ctx);
+    },
+    cancelLesson(id) {
+      const lesson = store.getById('lessons', id);
+      if (!lesson) return;
+      ConfirmModal.show(t('cancelLessonAction')).then(ok => {
+        if (ok) {
+          store.update('lessons', id, { status: 'cancelled' });
+          Toast.success(t('lessonCancelled'));
+          this.render();
+        }
+      });
     }
   };
 
   // ==================== PAYMENTS VIEW ====================
+  // Close context menu on click outside
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('ctx-menu');
+    if (menu && !e.target.closest('#ctx-menu')) {
+      menu.remove();
+    }
+  });
   const PaymentsView = {
     filter: 'all',
     render() {
