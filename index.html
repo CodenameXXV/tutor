@@ -182,6 +182,7 @@
       alertsTitle: 'Alerts & Reminders', noAlerts: 'All clear! No alerts.',
       lessonsLeft: 'lessons left in package', birthdayToday: 'is today!', birthdayIn: 'in', days: 'days',
       outstandingDebts: 'Outstanding Debts', totalDebt: 'Total debt',
+      paymentReminder: 'Payment Reminder', unpaidLessons: 'unpaid lessons',
       noLessonsMonth: 'No completed lessons this month',
       income: 'Income',
       // Students
@@ -266,6 +267,7 @@
       alertsTitle: 'Сповіщення та нагадування', noAlerts: 'Все чисто! Немає сповіщень.',
       lessonsLeft: 'уроків залишилось у пакеті', birthdayToday: 'сьогодні!', birthdayIn: 'через', days: 'днів',
       outstandingDebts: 'Непогашені борги', totalDebt: 'Загальний борг',
+      paymentReminder: 'Нагадування про оплату', unpaidLessons: 'неоплачених уроків',
       noLessonsMonth: 'Немає проведених уроків цього місяця',
       income: 'Дохід',
       // Students
@@ -350,6 +352,7 @@
       alertsTitle: 'Оповещения и напоминания', noAlerts: 'Всё чисто! Нет оповещений.',
       lessonsLeft: 'уроков осталось в пакете', birthdayToday: 'сегодня!', birthdayIn: 'через', days: 'дней',
       outstandingDebts: 'Неоплаченные долги', totalDebt: 'Общий долг',
+      paymentReminder: 'Напоминание об оплате', unpaidLessons: 'неоплаченных уроков',
       noLessonsMonth: 'Нет проведённых уроков в этом месяце',
       income: 'Доход',
       // Students
@@ -434,6 +437,7 @@
       alertsTitle: 'Benachrichtigungen & Erinnerungen', noAlerts: 'Alles klar! Keine Benachrichtigungen.',
       lessonsLeft: 'Unterrichte im Paket übrig', birthdayToday: 'ist heute!', birthdayIn: 'in', days: 'Tagen',
       outstandingDebts: 'Ausstehende Schulden', totalDebt: 'Gesamtschulden',
+      paymentReminder: 'Zahlungserinnerung', unpaidLessons: 'unbezahlte Unterrichte',
       noLessonsMonth: 'Keine abgeschlossenen Unterrichte diesen Monat',
       income: 'Einkommen',
       // Students
@@ -518,6 +522,7 @@
       alertsTitle: 'Alerty i przypomnienia', noAlerts: 'Wszystko jasne! Brak alertów.',
       lessonsLeft: 'lekcji zostało w pakiecie', birthdayToday: 'jest dzisiaj!', birthdayIn: 'za', days: 'dni',
       outstandingDebts: 'Zaległe długi', totalDebt: 'Całkowity dług',
+      paymentReminder: 'Przypomnienie o płatności', unpaidLessons: 'nieopłaconych lekcji',
       noLessonsMonth: 'Brak zrealizowanych lekcji w tym miesiącu',
       income: 'Dochód',
       // Students
@@ -1173,8 +1178,23 @@
                 const d = getDaysUntilBirthday(s.dateOfBirth);
                 return `<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs">🎂 <strong>${s.name}</strong> — ${t('upcomingBirthday')} ${d === 0 ? t('birthdayToday') : `${t('birthdayIn')} ${d} ${t('days')}`}</div>`;
               }).join('')}
+              ${students.filter(s => s.paymentSchedule).filter(s => { const ls = store.getAll('lessons').filter(l => l.studentId === s.id && l.status === 'completed').sort((a,b) => new Date(a.startAt) - new Date(b.startAt)); const ps = store.getAll('payments').filter(p => p.studentId === s.id && p.status === 'paid').sort((a,b) => new Date(a.paidAt) - new Date(b.paidAt)); const lpd = ps.length ? new Date(ps[ps.length-1].paidAt) : new Date(0); const cnt = ls.filter(l => new Date(l.startAt) > lpd).length; if (cnt === 0) return false; if (s.paymentSchedule === 'per_lesson') return cnt >= 1; if (s.paymentSchedule === 'daily') return ls.filter(l => new Date(l.startAt).toDateString() === new Date().toDateString() && new Date(l.startAt) > lpd).length >= 1; if (s.paymentSchedule === 'every_n') return cnt >= (s.paymentInterval || 5); return false; }).length > 0 ? `<div class="text-xs font-semibold text-orange-500 mb-1">💵 ${t('paymentReminder')}</div>` : ''}
+              ${students.filter(s => s.paymentSchedule).map(s => {
+                const ls = store.getAll('lessons').filter(l => l.studentId === s.id && l.status === 'completed').sort((a,b) => new Date(a.startAt) - new Date(b.startAt));
+                const ps = store.getAll('payments').filter(p => p.studentId === s.id && p.status === 'paid').sort((a,b) => new Date(a.paidAt) - new Date(b.paidAt));
+                const lpd = ps.length ? new Date(ps[ps.length-1].paidAt) : new Date(0);
+                const cnt = ls.filter(l => new Date(l.startAt) > lpd).length;
+                if (cnt === 0) return '';
+                let isDue = false;
+                if (s.paymentSchedule === 'per_lesson') isDue = cnt >= 1;
+                else if (s.paymentSchedule === 'daily') isDue = ls.filter(l => new Date(l.startAt).toDateString() === new Date().toDateString() && new Date(l.startAt) > lpd).length >= 1;
+                else if (s.paymentSchedule === 'every_n') isDue = cnt >= (s.paymentInterval || 5);
+                if (!isDue) return '';
+                const amount = cnt * (Number(s.pricePerLesson) || 0);
+                return `<div class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-xs">💵 <strong>${s.name}</strong>: ${cnt} ${t('unpaidLessons')} · ${formatCurrency(amount, settings.currency)}</div>`;
+              }).filter(Boolean).join('')}
               ${payments.filter(p => p.status === 'debt').length > 0 ? `<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-xs">💰 ${payments.filter(p => p.status === 'debt').length} ${t('outstandingDebts')}: ${formatCurrency(payments.filter(p => p.status === 'debt').reduce((s,p) => s + Number(p.amount), 0), settings.currency)}</div>` : ''}
-              ${packages.filter(p => (p.totalLessons - p.usedLessons) <= 2).length === 0 && students.filter(s => { const d = getDaysUntilBirthday(s.dateOfBirth); return d !== null && d <= 7; }).length === 0 && payments.filter(p => p.status === 'debt').length === 0 ? `<p class="text-sm text-slate-400">${t('noAlerts')}</p>` : ''}
+              ${packages.filter(p => (p.totalLessons - p.usedLessons) <= 2).length === 0 && students.filter(s => { const d = getDaysUntilBirthday(s.dateOfBirth); return d !== null && d <= 7; }).length === 0 && payments.filter(p => p.status === 'debt').length === 0 && (() => { const dueCount = students.filter(s => s.paymentSchedule).filter(s => { const ls = store.getAll('lessons').filter(l => l.studentId === s.id && l.status === 'completed').sort((a,b) => new Date(a.startAt) - new Date(b.startAt)); const ps = store.getAll('payments').filter(p => p.studentId === s.id && p.status === 'paid').sort((a,b) => new Date(a.paidAt) - new Date(b.paidAt)); const lpd = ps.length ? new Date(ps[ps.length-1].paidAt) : new Date(0); const cnt = ls.filter(l => new Date(l.startAt) > lpd).length; if (cnt === 0) return false; if (s.paymentSchedule === 'per_lesson') return cnt >= 1; if (s.paymentSchedule === 'daily') return ls.filter(l => new Date(l.startAt).toDateString() === new Date().toDateString() && new Date(l.startAt) > lpd).length >= 1; if (s.paymentSchedule === 'every_n') return cnt >= (s.paymentInterval || 5); return false; }).length; return dueCount; })() === 0 ? `<p class="text-sm text-slate-400">${t('noAlerts')}</p>` : ''}
             </div>
           </div>
         </div>`;
