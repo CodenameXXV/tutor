@@ -219,7 +219,7 @@
       clearConfirm1: 'This will delete ALL your data. Are you sure?',
       clearConfirm2: 'Really? This cannot be undone!',
       // Language
-      language: 'Language', english: 'English', ukrainian: 'Українська',
+      language: 'Language', english: 'English', ukrainian: 'Українська', russian: 'Russian', german: 'German', polish: 'Polish',
       // Notifications
       notifications: 'Notifications', markAllRead: 'Mark all read', noNotifications: 'No notifications',
       upcomingBirthday: 'Upcoming Birthday', packageRunningLow: 'Package Running Low',
@@ -302,7 +302,7 @@
       clearConfirm1: 'Це видалить УСІ ваші дані. Ви впевнені?',
       clearConfirm2: 'Справді? Це незворотна дія!',
       // Language
-      language: 'Мова', english: 'English', ukrainian: 'Українська',
+      language: 'Мова', english: 'English', ukrainian: 'Українська', russian: 'Російська', german: 'Німецька', polish: 'Польська',
       // Notifications
       notifications: 'Сповіщення', markAllRead: 'Позначити все прочитаним', noNotifications: 'Немає сповіщень',
       upcomingBirthday: 'Наближається день народження', packageRunningLow: 'Пакет закінчується',
@@ -314,12 +314,261 @@
       signInBtn: 'Увійти через Google', confirmBtn: 'Підтвердити',
       debtLabel: 'Борг', moreLessons: 'ще',
       mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Нд',
-    }
+    },
+    ru: {
+
+      // Dashboard
+      dashboard: 'Дашборд', welcomeBack: 'С возвращением',
+      todaysLessons: 'Уроки сегодня', thisWeek: 'на этой неделе',
+      activePackages: 'активных пакетов',
+      monthlyIncome: 'Ежемесячный доход', thisMonthLabel: 'в этом месяце',
+      completedMonth: 'Проведено (месяц)', cancelled: 'отменено',
+      incomeChartTitle: 'Ежемесячный доход', workloadChartTitle: 'Уроки по ученикам',
+      alertsTitle: 'Оповещения и напоминания', noAlerts: 'Всё чисто! Нет оповещений.',
+      lessonsLeft: 'уроков осталось в пакете', birthdayToday: 'сегодня!', birthdayIn: 'через', days: 'дней',
+      outstandingDebts: 'Неоплаченные долги', totalDebt: 'Общий долг',
+      noLessonsMonth: 'Нет проведённых уроков в этом месяце',
+      income: 'Доход',
+      // Students
+      students: 'Ученики', addStudent: 'Добавить ученика', noStudentsYet: 'Ещё нет учеников',
+      addFirstStudent: 'Добавьте первого ученика, чтобы начать', searchStudents: 'Поиск учеников...',
+      editStudent: 'Редактировать ученика', addStudentTitle: 'Добавить ученика',
+      name: 'Имя', phone: 'Телефон', email: 'Почта', telegram: 'Телеграм',
+      level: 'Уровень', pricePerLesson: 'Стоимость урока', dateOfBirth: 'Дата рождения',
+      learningGoal: 'Цель обучения', notes: 'Заметки', select: 'Выберите...',
+      beginner: 'Начальный', intermediate: 'Средний', advanced: 'Продвинутый',
+      update: 'Обновить', add: 'Добавить', cancel: 'Отмена', save: 'Сохранить',
+      noLevel: 'Без уровня', studentAdded: 'Ученик добавлен', studentUpdated: 'Ученик обновлён', studentDeleted: 'Ученик удалён',
+      deleteConfirm: 'Удалить этого ученика? Это необратимое действие.',
+      // Student Profile
+      backToStudents: 'Назад к ученикам', totalLessons: 'Всего уроков', activePackage: 'Активный пакет',
+      balance: 'Баланс', info: 'Инфо', packages: 'Пакеты', payments: 'Оплаты', lessons: 'Уроки',
+      newPackage: 'Новый пакет', noPackagesYet: 'Ещё нет пакетов',
+      numberOfLessons: 'Количество уроков', totalPricePaid: 'Общая сумма оплаты', expires: 'Срок действия (необязательно)',
+      createPackage: 'Создать пакет', packageCreated: 'Пакет создан',
+      purchased: 'Приобретено', used: 'использовано', perLesson: '/урок',
+      noPaymentsYet: 'Ещё нет оплат', noLessonsYet: 'Ещё нет уроков',
+      goal: 'Цель', birthday: 'День рождения',
+      // Calendar
+      calendar: 'Календарь', today: 'Сегодня', day: 'День', week: 'Неделя', month: 'Месяц',
+      newLesson: 'Новый урок', editLesson: 'Редактировать урок', student: 'Ученик',
+      title: 'Тема', date: 'Дата', time: 'Время', duration: 'Длительность (мин)', status: 'Статус',
+      scheduled: 'Запланировано', completed: 'Проведено', cancelledStatus: 'Отменено', rescheduled: 'Перенесено', absent: 'Отсутствовал',
+      repeatWeekly: 'Повторять еженедельно', times: 'раз', linkToPackage: 'Привязать к пакету', none: 'Нет',
+      homework: 'Домашнее задание', createLesson: 'Создать урок', updateLesson: 'Обновить урок',
+      deleteLesson: 'Удалить урок', deleteLessonConfirm: 'Удалить этот урок?',
+      lessonCreated: 'Урок создан', lessonsCreated: 'уроков создано', lessonUpdated: 'Урок обновлён', lessonDeleted: 'Урок удалён',
+      lessonTopic: 'Тема урока',
+      // Payments
+      paymentsTitle: 'Оплаты', records: 'записей', recordPayment: 'Записать оплату',
+      totalPaid: 'Всего оплачено', totalDebtTitle: 'Общий долг', thisMonth: 'В этом месяце',
+      all: 'Все', paid: 'Оплачено', partial: 'Частично', debt: 'Долг', advance: 'Аванс',
+      noPaymentsFound: 'Оплат не найдено', amount: 'Сумма', type: 'Тип', method: 'Метод',
+      note: 'Примечание', savePayment: 'Сохранить оплату', paymentRecorded: 'Оплата записана',
+      paymentDeleted: 'Оплата удалена', deletePaymentConfirm: 'Удалить эту оплату?',
+      lesson: 'Урок', package: 'Пакет', debtRepayment: 'Погашение долга', advanceType: 'Аванс',
+      cash: 'Наличные', card: 'Карта', transfer: 'Перевод', unknown: 'Неизвестно',
+      // Materials
+      materialsTitle: 'Материалы', items: 'элементов', addMaterial: 'Добавить материал',
+      noMaterialsYet: 'Ещё нет материалов', addMaterialsHint: 'Добавьте ссылки, заметки или файлы для ваших уроков',
+      materialTitle: 'Название', materialType: 'Тип', materialNote: 'Заметка', materialLink: 'Ссылка', materialFile: 'Файл',
+      url: 'URL', content: 'Содержание', tagsLabel: 'Теги (через запятую)',
+      saveMaterial: 'Сохранить материал', materialAdded: 'Материал добавлен', materialDeleted: 'Материал удалён',
+      deleteMaterialConfirm: 'Удалить этот материал?',
+      // Settings
+      settingsTitle: 'Настройки', profile: 'Профиль', yourName: 'Ваше имя', currency: 'Валюта',
+      appearance: 'Внешний вид', darkMode: 'Тёмная тема', dataManagement: 'Управление данными',
+      exportBackup: 'Экспорт резервной копии', importBackup: 'Импорт резервной копии', clearAllData: 'Очистить все данные',
+      settingsSaved: 'Настройки сохранены', backupExported: 'Резервная копия экспортирована',
+      dataImported: 'Данные успешно импортированы', invalidBackup: 'Недействительный файл резервной копии',
+      allDataCleared: 'Все данные очищены',
+      clearConfirm1: 'Это удалит ВСЕ ваши данные. Вы уверены?',
+      clearConfirm2: 'Действительно? Это необратимое действие!',
+      // Language
+      language: 'Язык', english: 'English', ukrainian: 'Українська', russian: 'Русский', german: 'Deutsch', polish: 'Polski',
+      // Notifications
+      notifications: 'Уведомления', markAllRead: 'Отметить всё прочитанным', noNotifications: 'Нет уведомлений',
+      upcomingBirthday: 'Приближается день рождения', packageRunningLow: 'Пакет заканчивается',
+      // Search
+      searchPlaceholder: 'Поиск учеников, уроков...', noResults: 'Ничего не найдено',
+      // Misc
+      signedInAs: 'Вы вошли как', tutor: 'Репетитор', signOut: 'Выйти',
+      signInTitle: 'Добро пожаловать в TutorPro', signInSub: 'Войдите через Google, чтобы управлять учениками, расписанием и финансами.',
+      signInBtn: 'Войти через Google', confirmBtn: 'Подтвердить',
+      debtLabel: 'Долг', moreLessons: 'ещё',
+      mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс',
+    },
+    de: {
+
+      // Dashboard
+      dashboard: 'Dashboard', welcomeBack: 'Willkommen zurück',
+      todaysLessons: 'Heutiger Unterricht', thisWeek: 'diese Woche',
+      activePackages: 'aktive Pakete',
+      monthlyIncome: 'Monatliches Einkommen', thisMonthLabel: 'diesen Monat',
+      completedMonth: 'Abgeschlossen (Monat)', cancelled: 'storniert',
+      incomeChartTitle: 'Monatliches Einkommen', workloadChartTitle: 'Unterrichte nach Schüler',
+      alertsTitle: 'Benachrichtigungen & Erinnerungen', noAlerts: 'Alles klar! Keine Benachrichtigungen.',
+      lessonsLeft: 'Unterrichte im Paket übrig', birthdayToday: 'ist heute!', birthdayIn: 'in', days: 'Tagen',
+      outstandingDebts: 'Ausstehende Schulden', totalDebt: 'Gesamtschulden',
+      noLessonsMonth: 'Keine abgeschlossenen Unterrichte diesen Monat',
+      income: 'Einkommen',
+      // Students
+      students: 'Schüler', addStudent: 'Schüler hinzufügen', noStudentsYet: 'Noch keine Schüler',
+      addFirstStudent: 'Füge deinen ersten Schüler hinzu', searchStudents: 'Schüler suchen...',
+      editStudent: 'Schüler bearbeiten', addStudentTitle: 'Schüler hinzufügen',
+      name: 'Name', phone: 'Telefon', email: 'E-Mail', telegram: 'Telegram',
+      level: 'Niveau', pricePerLesson: 'Preis pro Unterricht', dateOfBirth: 'Geburtsdatum',
+      learningGoal: 'Lernziel', notes: 'Notizen', select: 'Auswählen...',
+      beginner: 'Anfänger', intermediate: 'Mittelstufe', advanced: 'Fortgeschritten',
+      update: 'Aktualisieren', add: 'Hinzufügen', cancel: 'Abbrechen', save: 'Speichern',
+      noLevel: 'Kein Niveau', studentAdded: 'Schüler hinzugefügt', studentUpdated: 'Schüler aktualisiert', studentDeleted: 'Schüler gelöscht',
+      deleteConfirm: 'Diesen Schüler löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+      // Student Profile
+      backToStudents: 'Zurück zu Schülern', totalLessons: 'Gesamt Unterrichte', activePackage: 'Aktives Paket',
+      balance: 'Guthaben', info: 'Info', packages: 'Pakete', payments: 'Zahlungen', lessons: 'Unterrichte',
+      newPackage: 'Neues Paket', noPackagesYet: 'Noch keine Pakete',
+      numberOfLessons: 'Anzahl der Unterrichte', totalPricePaid: 'Gesamtpreis bezahlt', expires: 'Läuft ab (optional)',
+      createPackage: 'Paket erstellen', packageCreated: 'Paket erstellt',
+      purchased: 'Gekauft', used: 'genutzt', perLesson: '/Unterricht',
+      noPaymentsYet: 'Noch keine Zahlungen', noLessonsYet: 'Noch keine Unterrichte',
+      goal: 'Ziel', birthday: 'Geburtstag',
+      // Calendar
+      calendar: 'Kalender', today: 'Heute', day: 'Tag', week: 'Woche', month: 'Monat',
+      newLesson: 'Neuer Unterricht', editLesson: 'Unterricht bearbeiten', student: 'Schüler',
+      title: 'Thema', date: 'Datum', time: 'Zeit', duration: 'Dauer (Min)', status: 'Status',
+      scheduled: 'Geplant', completed: 'Abgeschlossen', cancelledStatus: 'Storniert', rescheduled: 'Verschoben', absent: 'Abwesend',
+      repeatWeekly: 'Wöchentlich wiederholen', times: 'Mal', linkToPackage: 'Mit Paket verknüpfen', none: 'Keine',
+      homework: 'Hausaufgaben', createLesson: 'Unterricht erstellen', updateLesson: 'Unterricht aktualisieren',
+      deleteLesson: 'Unterricht löschen', deleteLessonConfirm: 'Diesen Unterricht löschen?',
+      lessonCreated: 'Unterricht erstellt', lessonsCreated: 'Unterrichte erstellt', lessonUpdated: 'Unterricht aktualisiert', lessonDeleted: 'Unterricht gelöscht',
+      lessonTopic: 'Unterrichtsthema',
+      // Payments
+      paymentsTitle: 'Zahlungen', records: 'Einträge', recordPayment: 'Zahlung erfassen',
+      totalPaid: 'Insgesamt bezahlt', totalDebtTitle: 'Gesamtschulden', thisMonth: 'Diesen Monat',
+      all: 'Alle', paid: 'Bezahlt', partial: 'Teilweise', debt: 'Schulden', advance: 'Vorauszahlung',
+      noPaymentsFound: 'Keine Zahlungen gefunden', amount: 'Betrag', type: 'Typ', method: 'Methode',
+      note: 'Notiz', savePayment: 'Zahlung speichern', paymentRecorded: 'Zahlung erfasst',
+      paymentDeleted: 'Zahlung gelöscht', deletePaymentConfirm: 'Diese Zahlung löschen?',
+      lesson: 'Unterricht', package: 'Paket', debtRepayment: 'Schuldentilgung', advanceType: 'Vorauszahlung',
+      cash: 'Bar', card: 'Karte', transfer: 'Überweisung', unknown: 'Unbekannt',
+      // Materials
+      materialsTitle: 'Materialien', items: 'Elemente', addMaterial: 'Material hinzufügen',
+      noMaterialsYet: 'Noch keine Materialien', addMaterialsHint: 'Füge Links, Notizen oder Dateien für deine Unterrichte hinzu',
+      materialTitle: 'Titel', materialType: 'Typ', materialNote: 'Notiz', materialLink: 'Link', materialFile: 'Datei',
+      url: 'URL', content: 'Inhalt', tagsLabel: 'Tags (durch Komma getrennt)',
+      saveMaterial: 'Material speichern', materialAdded: 'Material hinzugefügt', materialDeleted: 'Material gelöscht',
+      deleteMaterialConfirm: 'Dieses Material löschen?',
+      // Settings
+      settingsTitle: 'Einstellungen', profile: 'Profil', yourName: 'Dein Name', currency: 'Währung',
+      appearance: 'Erscheinungsbild', darkMode: 'Dunkelmodus', dataManagement: 'Datenverwaltung',
+      exportBackup: 'Backup exportieren', importBackup: 'Backup importieren', clearAllData: 'Alle Daten löschen',
+      settingsSaved: 'Einstellungen gespeichert', backupExported: 'Backup exportiert',
+      dataImported: 'Daten erfolgreich importiert', invalidBackup: 'Ungültige Backup-Datei',
+      allDataCleared: 'Alle Daten gelöscht',
+      clearConfirm1: 'Dies wird ALLE deine Daten löschen. Bist du sicher?',
+      clearConfirm2: 'Wirklich? Dies kann nicht rückgängig gemacht werden!',
+      // Language
+      language: 'Sprache', english: 'English', ukrainian: 'Українська', russian: 'Русский', german: 'Deutsch', polish: 'Polski',
+      // Notifications
+      notifications: 'Benachrichtigungen', markAllRead: 'Alle als gelesen markieren', noNotifications: 'Keine Benachrichtigungen',
+      upcomingBirthday: 'Bevorstehender Geburtstag', packageRunningLow: 'Paket wird knapp',
+      // Search
+      searchPlaceholder: 'Schüler, Unterricht suchen...', noResults: 'Keine Ergebnisse gefunden',
+      // Misc
+      signedInAs: 'Angemeldet als', tutor: 'Tutor', signOut: 'Abmelden',
+      signInTitle: 'Willkommen bei TutorPro', signInSub: 'Melde dich mit deinem Google-Konto an, um Schüler, Termine und Finanzen zu verwalten.',
+      signInBtn: 'Mit Google anmelden', confirmBtn: 'Bestätigen',
+      debtLabel: 'Schulden', moreLessons: 'mehr',
+      mon: 'Mo', tue: 'Di', wed: 'Mi', thu: 'Do', fri: 'Fr', sat: 'Sa', sun: 'So',
+    },
+    pl: {
+
+      // Dashboard
+      dashboard: 'Panel', welcomeBack: 'Witaj z powrotem',
+      todaysLessons: 'Dzisiejsze lekcje', thisWeek: 'w tym tygodniu',
+      activePackages: 'aktywnych pakietów',
+      monthlyIncome: 'Miesięczny dochód', thisMonthLabel: 'w tym miesiącu',
+      completedMonth: 'Zrealizowano (miesiąc)', cancelled: 'anulowano',
+      incomeChartTitle: 'Miesięczny dochód', workloadChartTitle: 'Lekcje według ucznia',
+      alertsTitle: 'Alerty i przypomnienia', noAlerts: 'Wszystko jasne! Brak alertów.',
+      lessonsLeft: 'lekcji zostało w pakiecie', birthdayToday: 'jest dzisiaj!', birthdayIn: 'za', days: 'dni',
+      outstandingDebts: 'Zaległe długi', totalDebt: 'Całkowity dług',
+      noLessonsMonth: 'Brak zrealizowanych lekcji w tym miesiącu',
+      income: 'Dochód',
+      // Students
+      students: 'Uczniowie', addStudent: 'Dodaj ucznia', noStudentsYet: 'Brak uczniów',
+      addFirstStudent: 'Dodaj pierwszego ucznia, aby rozpocząć', searchStudents: 'Szukaj uczniów...',
+      editStudent: 'Edytuj ucznia', addStudentTitle: 'Dodaj ucznia',
+      name: 'Imię', phone: 'Telefon', email: 'E-mail', telegram: 'Telegram',
+      level: 'Poziom', pricePerLesson: 'Cena za lekcję', dateOfBirth: 'Data urodzenia',
+      learningGoal: 'Cel nauki', notes: 'Notatki', select: 'Wybierz...',
+      beginner: 'Początkujący', intermediate: 'Średniozaawansowany', advanced: 'Zaawansowany',
+      update: 'Aktualizuj', add: 'Dodaj', cancel: 'Anuluj', save: 'Zapisz',
+      noLevel: 'Brak poziomu', studentAdded: 'Ucznia dodano', studentUpdated: 'Ucznia zaktualizowano', studentDeleted: 'Ucznia usunięto',
+      deleteConfirm: 'Usunąć tego ucznia? Tej czynności nie można cofnąć.',
+      // Student Profile
+      backToStudents: 'Powrót do uczniów', totalLessons: 'Wszystkie lekcje', activePackage: 'Aktywny pakiet',
+      balance: 'Saldo', info: 'Info', packages: 'Pakiety', payments: 'Płatności', lessons: 'Lekcje',
+      newPackage: 'Nowy pakiet', noPackagesYet: 'Brak pakietów',
+      numberOfLessons: 'Liczba lekcji', totalPricePaid: 'Łączna zapłacona kwota', expires: 'Wygasa (opcjonalnie)',
+      createPackage: 'Utwórz pakiet', packageCreated: 'Pakiet utworzony',
+      purchased: 'Zakupiono', used: 'wykorzystano', perLesson: '/lekcja',
+      noPaymentsYet: 'Brak płatności', noLessonsYet: 'Brak lekcji',
+      goal: 'Cel', birthday: 'Urodziny',
+      // Calendar
+      calendar: 'Kalendarz', today: 'Dziś', day: 'Dzień', week: 'Tydzień', month: 'Miesiąc',
+      newLesson: 'Nowa lekcja', editLesson: 'Edytuj lekcję', student: 'Uczeń',
+      title: 'Temat', date: 'Data', time: 'Czas', duration: 'Czas trwania (min)', status: 'Status',
+      scheduled: 'Zaplanowano', completed: 'Zrealizowano', cancelledStatus: 'Anulowano', rescheduled: 'Przełożono', absent: 'Nieobecny',
+      repeatWeekly: 'Powtarzaj co tydzień', times: 'razy', linkToPackage: 'Połącz z pakietem', none: 'Brak',
+      homework: 'Zadanie domowe', createLesson: 'Utwórz lekcję', updateLesson: 'Aktualizuj lekcję',
+      deleteLesson: 'Usuń lekcję', deleteLessonConfirm: 'Usunąć tę lekcję?',
+      lessonCreated: 'Lekcja utworzona', lessonsCreated: 'lekcji utworzonych', lessonUpdated: 'Lekcja zaktualizowana', lessonDeleted: 'Lekcja usunięta',
+      lessonTopic: 'Temat lekcji',
+      // Payments
+      paymentsTitle: 'Płatności', records: 'wpisów', recordPayment: 'Zarejestruj płatność',
+      totalPaid: 'Łącznie zapłacono', totalDebtTitle: 'Całkowity dług', thisMonth: 'W tym miesiącu',
+      all: 'Wszystkie', paid: 'Zapłacono', partial: 'Częściowo', debt: 'Dług', advance: 'Zaliczka',
+      noPaymentsFound: 'Nie znaleziono płatności', amount: 'Kwota', type: 'Typ', method: 'Metoda',
+      note: 'Uwaga', savePayment: 'Zapisz płatność', paymentRecorded: 'Płatność zarejestrowana',
+      paymentDeleted: 'Płatność usunięta', deletePaymentConfirm: 'Usunąć tę płatność?',
+      lesson: 'Lekcja', package: 'Pakiet', debtRepayment: 'Spłata długu', advanceType: 'Zaliczka',
+      cash: 'Gotówka', card: 'Karta', transfer: 'Przelew', unknown: 'Nieznany',
+      // Materials
+      materialsTitle: 'Materiały', items: 'elementów', addMaterial: 'Dodaj materiał',
+      noMaterialsYet: 'Brak materiałów', addMaterialsHint: 'Dodaj linki, notatki lub pliki do swoich lekcji',
+      materialTitle: 'Tytuł', materialType: 'Typ', materialNote: 'Notatka', materialLink: 'Link', materialFile: 'Plik',
+      url: 'URL', content: 'Treść', tagsLabel: 'Tagi (oddzielone przecinkami)',
+      saveMaterial: 'Zapisz materiał', materialAdded: 'Materiał dodany', materialDeleted: 'Materiał usunięty',
+      deleteMaterialConfirm: 'Usunąć ten materiał?',
+      // Settings
+      settingsTitle: 'Ustawienia', profile: 'Profil', yourName: 'Twoje imię', currency: 'Waluta',
+      appearance: 'Wygląd', darkMode: 'Tryb ciemny', dataManagement: 'Zarządzanie danymi',
+      exportBackup: 'Eksport kopii zapasowej', importBackup: 'Import kopii zapasowej', clearAllData: 'Wyczyść wszystkie dane',
+      settingsSaved: 'Ustawienia zapisane', backupExported: 'Kopia zapasowa wyeksportowana',
+      dataImported: 'Dane zaimportowane pomyślnie', invalidBackup: 'Nieprawidłowy plik kopii zapasowej',
+      allDataCleared: 'Wszystkie dane wyczyszczone',
+      clearConfirm1: 'To usunie WSZYSTKIE twoje dane. Jesteś pewny?',
+      clearConfirm2: 'Naprawdę? Tej czynności nie można cofnąć!',
+      // Language
+      language: 'Język', english: 'English', ukrainian: 'Українська', russian: 'Русский', german: 'Deutsch', polish: 'Polski',
+      // Notifications
+      notifications: 'Powiadomienia', markAllRead: 'Oznacz wszystkie jako przeczytane', noNotifications: 'Brak powiadomień',
+      upcomingBirthday: 'Nadchodzące urodziny', packageRunningLow: 'Pakiet się kończy',
+      // Search
+      searchPlaceholder: 'Szukaj uczniów, lekcji...', noResults: 'Nie znaleziono wyników',
+      // Misc
+      signedInAs: 'Zalogowany jako', tutor: 'Korepetytor', signOut: 'Wyloguj się',
+      signInTitle: 'Witaj w TutorPro', signInSub: 'Zaloguj się przez Google, aby zarządzać uczniami, harmonogramem i finansami.',
+      signInBtn: 'Zaloguj przez Google', confirmBtn: 'Potwierdź',
+      debtLabel: 'Dług', moreLessons: 'więcej',
+      mon: 'Pon', tue: 'Wt', wed: 'Śr', thu: 'Czw', fri: 'Pt', sat: 'Sob', sun: 'Niedz',
+    },
   };
   const getLang = () => (getSettings().lang || 'en');
   const t = (key) => (I18N[getLang()] && I18N[getLang()][key]) || I18N.en[key] || key;
   const setLang = (lang) => { const s = getSettings(); store.saveSettings({ ...s, lang }); document.documentElement.lang = lang; const handler = Router.routes[Router.current] || Router.routes['dashboard']; handler(Router.params); };
-  const langSelector = () => `<select onchange="setLang(this.value)" class="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs"><option value="en" ${getLang()==='en'?'selected':''}>${t('english')}</option><option value="uk" ${getLang()==='uk'?'selected':''}>${t('ukrainian')}</option></select>`;
+  const langSelector = () => `<select onchange="setLang(this.value)" class="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs"><option value="en" ${getLang()==='en'?'selected':''}>${t('english')}</option><option value="uk" ${getLang()==='uk'?'selected':''}>${t('ukrainian')}</option><option value="ru" ${getLang()==='ru'?'selected':''}>${t('russian')}</option><option value="de" ${getLang()==='de'?'selected':''}>${t('german')}</option><option value="pl" ${getLang()==='pl'?'selected':''}>${t('polish')}</option></select>`;
 
   // ==================== FIREBASE INIT ====================
   const firebaseConfig = {
@@ -836,7 +1085,7 @@
       const content = `
         <div class="mb-6">
           <h1 class="text-2xl font-bold">${t('dashboard')}</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">${t('welcomeBack')}, ${settings.name || t('tutor')}!</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">${t('welcomeBack')}, ${settings.name || firebase.auth().currentUser?.displayName || t('tutor')}!</p>
         </div>
         <!-- Stats Grid -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -968,7 +1217,6 @@
             <div class="w-16 h-16 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-white opacity-50">${Icons.users}</div>
             <h3 class="text-lg font-semibold mb-2">${t('noStudentsYet')}</h3>
             <p class="text-sm text-slate-400 mb-4">${t('addFirstStudent')}</p>
-            <button onclick="StudentsView.openForm()" class="gradient-bg text-white px-4 py-2 rounded-xl text-sm font-semibold">${Icons.plus} ${t('addStudent')}</button>
           </div>
         ` : `
           <div class="mb-4">
