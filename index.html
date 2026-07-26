@@ -360,19 +360,30 @@
       const loadCollection = (name) => {
         return col(name).get().then(snapshot => {
           this._cache[name] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          // Real-time listener
+          // Real-time listener (skip event if data hasn't changed — prevents double re-renders)
           const unsub = col(name).onSnapshot(snap => {
+            let changed = false;
             snap.docChanges().forEach(change => {
               const data = { id: change.doc.id, ...change.doc.data() };
               const idx = this._cache[name].findIndex(i => i.id === change.doc.id);
               if (change.type === 'added' || change.type === 'modified') {
-                if (idx >= 0) this._cache[name][idx] = data;
-                else this._cache[name].push(data);
+                if (idx >= 0) {
+                  if (JSON.stringify(this._cache[name][idx]) !== JSON.stringify(data)) {
+                    this._cache[name][idx] = data;
+                    changed = true;
+                  }
+                } else {
+                  this._cache[name].push(data);
+                  changed = true;
+                }
               } else if (change.type === 'removed') {
-                if (idx >= 0) this._cache[name].splice(idx, 1);
+                if (idx >= 0) {
+                  this._cache[name].splice(idx, 1);
+                  changed = true;
+                }
               }
             });
-            EventBus.emit(name + 'Changed');
+            if (changed) EventBus.emit(name + 'Changed');
           });
           this._unsubs.push(unsub);
         });
@@ -386,11 +397,14 @@
         if (settingsSnap.exists) this._cache.settings = settingsSnap.data();
       } catch(e) { /* settings doc may not exist yet */ }
 
-      // Listen for remote settings changes
+      // Listen for remote settings changes (skip if unchanged — prevents double-render)
       const settingsUnsub = settingsRef.onSnapshot(snap => {
         if (snap.exists) {
-          this._cache.settings = snap.data();
-          EventBus.emit('settingsChanged');
+          const data = snap.data();
+          if (JSON.stringify(this._cache.settings) !== JSON.stringify(data)) {
+            this._cache.settings = data;
+            EventBus.emit('settingsChanged');
+          }
         }
       });
       this._unsubs.push(settingsUnsub);
