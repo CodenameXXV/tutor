@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TutorPro — Tutor Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-analytics-compat.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: { 50:'#e6f2ff',100:'#b3d9ff',200:'#80bfff',300:'#4da6ff',400:'#1a8cff',500:'#007BFF',600:'#0062cc',700:'#004999',800:'#003166',900:'#001833' },
+            accent: { 400:'#33ddff',500:'#00D4FF',600:'#00a9cc' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; margin: 0; }
+
+    /* Glassmorphism */
+    .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); }
+    .glass-dark { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(30,41,59,0.6); border: 1px solid rgba(255,255,255,0.08); }
+    .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; transition: transform 0.3s, box-shadow 0.3s; }
+    .glass-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,123,255,0.12); }
+    .dark .glass-card { background: rgba(30,41,59,0.5); border-color: rgba(255,255,255,0.08); }
+    .dark .glass-card:hover { box-shadow: 0 20px 40px rgba(0,212,255,0.1); }
+
+    /* Gradient */
+    .gradient-text { background: linear-gradient(135deg, #007BFF, #00D4FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gradient-bg { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    .gradient-bg-hover:hover { background: linear-gradient(135deg, #0062cc, #00a9cc); }
+
+    /* Sidebar */
+    .sidebar { width: 260px; transition: transform 0.3s ease, width 0.3s ease; }
+    .sidebar.collapsed { transform: translateX(-260px); }
+    @media (max-width: 768px) { .sidebar { position: fixed; z-index: 50; height: 100vh; transform: translateX(-260px); } .sidebar.open { transform: translateX(0); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    /* Modal overlay */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+    .modal-content { transform: scale(0.95) translateY(10px); transition: transform 0.2s; max-height: 90vh; overflow-y: auto; }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: 12px; color: white; font-size: 14px; font-weight: 500; animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
+    .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .toast-info { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    /* Calendar */
+    .cal-slot { min-height: 60px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
+    .cal-slot:hover { background: rgba(0,123,255,0.05); }
+    .dark .cal-slot { border-bottom-color: #334155; }
+    .dark .cal-slot:hover { background: rgba(0,212,255,0.05); }
+
+    /* Lesson pill */
+    .lesson-pill { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: transform 0.15s; }
+    .lesson-pill:hover { transform: scale(1.02); }
+
+    /* Status badges */
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge-scheduled { background: #dbeafe; color: #1d4ed8; }
+    .badge-completed { background: #d1fae5; color: #059669; }
+    .badge-cancelled { background: #fee2e2; color: #dc2626; }
+    .badge-absent { background: #fef3c7; color: #d97706; }
+    .badge-rescheduled { background: #e0e7ff; color: #4338ca; }
+    .dark .badge-scheduled { background: #1e3a5f; color: #93c5fd; }
+    .dark .badge-completed { background: #064e3b; color: #6ee7b7; }
+    .dark .badge-cancelled { background: #7f1d1d; color: #fca5a5; }
+    .dark .badge-absent { background: #78350f; color: #fcd34d; }
+    .dark .badge-rescheduled { background: #312e81; color: #a5b4fc; }
+
+    /* FAB */
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 40; box-shadow: 0 4px 20px rgba(0,123,255,0.3); transition: transform 0.2s; }
+    .fab:hover { transform: scale(1.1); }
+
+    /* Print */
+    @media print { .no-print { display: none !important; } }
+
+    /* Transitions for sidebar links */
+    .nav-link { transition: background 0.15s, color 0.15s; }
+    .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.1), rgba(0,212,255,0.1)); color: #007BFF; font-weight: 600; }
+    .dark .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.2), rgba(0,212,255,0.2)); color: #00D4FF; }
+  </style>
+</head>
+<body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+  // ==================== UTILITIES ====================
+  const uuid = () => crypto.randomUUID ? crypto.randomUUID() : 'xxxx-xxxx-xxxx'.replace(/x/g, () => ((Math.random()*16)|0).toString(16));
+  const formatCurrency = (amount, currency = 'UAH') => {
+    const symbols = { UAH: '₴', USD: '$', EUR: '€', GBP: '£' };
+    return `${(symbols[currency] || currency)} ${Number(amount).toLocaleString('uk-UA', {minimumFractionDigits: 0, maximumFractionDigits: 2})}`;
+  };
+  const formatDate = (d, short = false) => {
+    if (!d) return '';
+    const date = new Date(d);
+    return short ? date.toLocaleDateString('en-GB', {day:'2-digit',month:'short'}) : date.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+  };
+  const formatTime = (d) => {
+    if (!d) return '';
+    const date = new Date(d);
+    return date.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  };
+  const formatDateTime = (d) => `${formatDate(d, true)} ${formatTime(d)}`;
+  const isToday = (d) => { const t = new Date(), dd = new Date(d); return t.toDateString() === dd.toDateString(); };
+  const isThisWeek = (d) => { const now = new Date(), dd = new Date(d), start = new Date(now); start.setDate(now.getDate()-now.getDay()); start.setHours(0,0,0,0); const end = new Date(start); end.setDate(start.getDate()+7); return dd >= start && dd < end; };
+  const isThisMonth = (d) => { const t = new Date(), dd = new Date(d); return t.getMonth() === dd.getMonth() && t.getFullYear() === dd.getFullYear(); };
+  const getDaysUntilBirthday = (dob) => {
+    if (!dob) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const bday = new Date(today.getFullYear(), new Date(dob).getMonth(), new Date(dob).getDate());
+    if (bday < today) bday.setFullYear(today.getFullYear() + 1);
+    return Math.round((bday - today) / 86400000);
+  };
+  const exportCSV = (data, filename) => {
+    if (!data.length) return;
+    const headers = Object.keys(data[0]);
+    const csv = [headers.join(','), ...data.map(r => headers.map(h => `"${(r[h]??'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  };
+
+  // ==================== I18N ====================
+  const I18N = {
+    en: {
+
+      // Dashboard
+      dashboard: 'Dashboard', welcomeBack: 'Welcome back',
+      todaysLessons: "Today's Lessons", thisWeek: 'this week',
+      activePackages: 'active packages',
+      monthlyIncome: 'Monthly Income', thisMonthLabel: 'this month',
+      completedMonth: 'Completed (month)', cancelled: 'cancelled',
+      incomeChartTitle: 'Monthly Income', workloadChartTitle: 'Lessons by Student',
+      alertsTitle: 'Alerts & Reminders', noAlerts: 'All clear! No alerts.',
+      lessonsLeft: 'lessons left in package', birthdayToday: 'is today!', birthdayIn: 'in', days: 'days',
+      outstandingDebts: 'Outstanding Debts', totalDebt: 'Total debt',
+      noLessonsMonth: 'No completed lessons this month',
+      income: 'Income',
+      // Students
+      students: 'Students', addStudent: 'Add Student', noStudentsYet: 'No students yet',
+      addFirstStudent: 'Add your first student to get started', searchStudents: 'Search students...',
+      editStudent: 'Edit Student', addStudentTitle: 'Add Student',
+      name: 'Name', phone: 'Phone', email: 'Email', telegram: 'Telegram',
+      level: 'Level', pricePerLesson: 'Price per lesson', dateOfBirth: 'Date of Birth',
+      learningGoal: 'Learning Goal', notes: 'Notes', select: 'Select...',
+      beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced',
+      update: 'Update', add: 'Add', cancel: 'Cancel', save: 'Save',
+      noLevel: 'No level', studentAdded: 'Student added', studentUpdated: 'Student updated', studentDeleted: 'Student deleted',
+      deleteConfirm: 'Delete this student? This cannot be undone.',
+      // Student Profile
+      backToStudents: 'Back to Students', totalLessons: 'Total Lessons', activePackage: 'Active Package',
+      balance: 'Balance', info: 'Info', packages: 'Packages', payments: 'Payments', lessons: 'Lessons',
+      newPackage: 'New Package', noPackagesYet: 'No packages yet',
+      numberOfLessons: 'Number of lessons', totalPricePaid: 'Total price paid', expires: 'Expires (optional)',
+      createPackage: 'Create Package', packageCreated: 'Package created',
+      purchased: 'Purchased', used: 'used', perLesson: '/lesson',
+      noPaymentsYet: 'No payments yet', noLessonsYet: 'No lessons yet',
+      goal: 'Goal', birthday: 'Birthday',
+      // Calendar
+      calendar: 'Calendar', today: 'Today', day: 'Day', week: 'Week', month: 'Month',
+      newLesson: 'New Lesson', editLesson: 'Edit Lesson', student: 'Student',
+      title: 'Title', date: 'Date', time: 'Time', duration: 'Duration (min)', status: 'Status',
+      scheduled: 'Scheduled', completed: 'Completed', cancelledStatus: 'Cancelled', rescheduled: 'Rescheduled', absent: 'Absent',
+      repeatWeekly: 'Repeat weekly for', times: 'times', linkToPackage: 'Link to Package', none: 'None',
+      homework: 'Homework', createLesson: 'Create Lesson', updateLesson: 'Update Lesson',
+      deleteLesson: 'Delete Lesson', deleteLessonConfirm: 'Delete this lesson?',
+      lessonCreated: 'Lesson created', lessonsCreated: 'lessons created', lessonUpdated: 'Lesson updated', lessonDeleted: 'Lesson deleted',
+      lessonTopic: 'Lesson topic',
+      // Payments
+      paymentsTitle: 'Payments', records: 'records', recordPayment: 'Record Payment',
+      totalPaid: 'Total Paid', totalDebtTitle: 'Total Debt', thisMonth: 'This Month',
+      all: 'All', paid: 'Paid', partial: 'Partial', debt: 'Debt', advance: 'Advance',
+      noPaymentsFound: 'No payments found', amount: 'Amount', type: 'Type', method: 'Method',
+      note: 'Note', savePayment: 'Save Payment', paymentRecorded: 'Payment recorded',
+      paymentDeleted: 'Payment deleted', deletePaymentConfirm: 'Delete this payment?',
+      lesson: 'Lesson', package: 'Package', debtRepayment: 'Debt Repayment', advanceType: 'Advance',
+      cash: 'Cash', card: 'Card', transfer: 'Transfer', unknown: 'Unknown',
+      // Materials
+      materialsTitle: 'Materials', items: 'items', addMaterial: 'Add Material',
+      noMaterialsYet: 'No materials yet', addMaterialsHint: 'Add links, notes, or files for your lessons',
+      materialTitle: 'Title', materialType: 'Type', materialNote: 'Note', materialLink: 'Link', materialFile: 'File',
+      url: 'URL', content: 'Content', tagsLabel: 'Tags (comma-separated)',
+      saveMaterial: 'Save Material', materialAdded: 'Material added', materialDeleted: 'Material deleted',
+      deleteMaterialConfirm: 'Delete this material?',
+      // Settings
+      settingsTitle: 'Settings', profile: 'Profile', yourName: 'Your Name', currency: 'Currency',
+      appearance: 'Appearance', darkMode: 'Dark Mode', dataManagement: 'Data Management',
+      exportBackup: 'Export Backup', importBackup: 'Import Backup', clearAllData: 'Clear All Data',
+      settingsSaved: 'Settings saved', backupExported: 'Backup exported',
+      dataImported: 'Data imported successfully', invalidBackup: 'Invalid backup file',
+      allDataCleared: 'All data cleared',
+      clearConfirm1: 'This will delete ALL your data. Are you sure?',
+      clearConfirm2: 'Really? This cannot be undone!',
+      // Language
+      language: 'Language', english: 'English', ukrainian: 'Українська',
+      // Notifications
+      notifications: 'Notifications', markAllRead: 'Mark all read', noNotifications: 'No notifications',
+      upcomingBirthday: 'Upcoming Birthday', packageRunningLow: 'Package Running Low',
+      // Search
+      searchPlaceholder: 'Search students, lessons...', noResults: 'No results found',
+      // Misc
+      signedInAs: 'Signed in as', tutor: 'Tutor', signOut: 'Sign Out',
+      signInTitle: 'Welcome to TutorPro', signInSub: 'Sign in with your Google account to manage your students, schedule, and finances.',
+      signInBtn: 'Sign in with Google',
+      debtLabel: 'Debt', moreLessons: 'more',
+      mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
+    },
+    uk: {
+
+      // Dashboard
+      dashboard: 'Дашборд', welcomeBack: 'З поверненням',
+      todaysLessons: 'Уроки сьогодні', thisWeek: 'цього тижня',
+      activePackages: 'активних пакетів',
+      monthlyIncome: 'Місячний дохід', thisMonthLabel: 'цього місяця',
+      completedMonth: 'Проведено (місяць)', cancelled: 'скасовано',
+      incomeChartTitle: 'Місячний дохід', workloadChartTitle: 'Уроки по учнях',
+      alertsTitle: 'Сповіщення та нагадування', noAlerts: 'Все чисто! Немає сповіщень.',
+      lessonsLeft: 'уроків залишилось у пакеті', birthdayToday: 'сьогодні!', birthdayIn: 'через', days: 'днів',
+      outstandingDebts: 'Непогашені борги', totalDebt: 'Загальний борг',
+      noLessonsMonth: 'Немає проведених уроків цього місяця',
+      income: 'Дохід',
+      // Students
+      students: 'Учні', addStudent: 'Додати учня', noStudentsYet: 'Ще немає учнів',
+      addFirstStudent: 'Додайте першого учня, щоб почати', searchStudents: 'Пошук учнів...',
+      editStudent: 'Редагувати учня', addStudentTitle: 'Додати учня',
+      name: "Ім'я", phone: 'Телефон', email: 'Пошта', telegram: 'Телеграм',
+      level: 'Рівень', pricePerLesson: 'Вартість уроку', dateOfBirth: 'Дата народження',
+      learningGoal: 'Мета навчання', notes: 'Нотатки', select: 'Оберіть...',
+      beginner: 'Початковий', intermediate: 'Середній', advanced: 'Просунутий',
+      update: 'Оновити', add: 'Додати', cancel: 'Скасувати', save: 'Зберегти',
+      noLevel: 'Без рівня', studentAdded: 'Учня додано', studentUpdated: 'Учня оновлено', studentDeleted: 'Учня видалено',
+      deleteConfirm: 'Видалити цього учня? Це незворотна дія.',
+      // Student Profile
+      backToStudents: 'Назад до учнів', totalLessons: 'Всього уроків', activePackage: 'Активний пакет',
+      balance: 'Баланс', info: 'Інфо', packages: 'Пакети', payments: 'Оплати', lessons: 'Уроки',
+      newPackage: 'Новий пакет', noPackagesYet: 'Ще немає пакетів',
+      numberOfLessons: 'Кількість уроків', totalPricePaid: 'Загальна сума оплати', expires: 'Термін дії (необов\'язково)',
+      createPackage: 'Створити пакет', packageCreated: 'Пакет створено',
+      purchased: 'Придбано', used: 'використано', perLesson: '/урок',
+      noPaymentsYet: 'Ще немає оплат', noLessonsYet: 'Ще немає уроків',
+      goal: 'Мета', birthday: 'День народження',
+      // Calendar
+      calendar: 'Календар', today: 'Сьогодні', day: 'День', week: 'Тиждень', month: 'Місяць',
+      newLesson: 'Новий урок', editLesson: 'Редагувати урок', student: 'Учень',
+      title: 'Тема', date: 'Дата', time: 'Час', duration: 'Тривалість (хв)', status: 'Статус',
+      scheduled: 'Заплановано', completed: 'Проведено', cancelledStatus: 'Скасовано', rescheduled: 'Перенесено', absent: 'Відсутній',
+      repeatWeekly: 'Повторювати щотижня', times: 'разів', linkToPackage: "Прив'язати до пакету", none: 'Немає',
+      homework: 'Домашнє завдання', createLesson: 'Створити урок', updateLesson: 'Оновити урок',
+      deleteLesson: 'Видалити урок', deleteLessonConfirm: 'Видалити цей урок?',
+      lessonCreated: 'Урок створено', lessonsCreated: 'уроків створено', lessonUpdated: 'Урок оновлено', lessonDeleted: 'Урок видалено',
+      lessonTopic: 'Тема уроку',
+      // Payments
+      paymentsTitle: 'Оплати', records: 'записів', recordPayment: 'Записати оплату',
+      totalPaid: 'Всього оплачено', totalDebtTitle: 'Загальний борг', thisMonth: 'Цього місяця',
+      all: 'Усі', paid: 'Оплачено', partial: 'Частково', debt: 'Борг', advance: 'Аванс',
+      noPaymentsFound: 'Оплат не знайдено', amount: 'Сума', type: 'Тип', method: 'Метод',
+      note: 'Примітка', savePayment: 'Зберегти оплату', paymentRecorded: 'Оплату записано',
+      paymentDeleted: 'Оплату видалено', deletePaymentConfirm: 'Видалити цю оплату?',
+      lesson: 'Урок', package: 'Пакет', debtRepayment: 'Погашення боргу', advanceType: 'Аванс',
+      cash: 'Готівка', card: 'Картка', transfer: 'Переказ', unknown: 'Невідомо',
+      // Materials
+      materialsTitle: 'Матеріали', items: 'елементів', addMaterial: 'Додати матеріал',
+      noMaterialsYet: 'Ще немає матеріалів', addMaterialsHint: 'Додайте посилання, нотатки або файли для ваших уроків',
+      materialTitle: 'Назва', materialType: 'Тип', materialNote: 'Нотатка', materialLink: 'Посилання', materialFile: 'Файл',
+      url: 'URL', content: 'Вміст', tagsLabel: 'Теги (через кому)',
+      saveMaterial: 'Зберегти матеріал', materialAdded: 'Матеріал додано', materialDeleted: 'Матеріал видалено',
+      deleteMaterialConfirm: 'Видалити цей матеріал?',
+      // Settings
+      settingsTitle: 'Налаштування', profile: 'Профіль', yourName: 'Ваше ім\'я', currency: 'Валюта',
+      appearance: 'Зовнішній вигляд', darkMode: 'Темна тема', dataManagement: 'Керування даними',
+      exportBackup: 'Експорт резервної копії', importBackup: 'Імпорт резервної копії', clearAllData: 'Очистити всі дані',
+      settingsSaved: 'Налаштування збережено', backupExported: 'Резервну копію експортовано',
+      dataImported: 'Дані успішно імпортовано', invalidBackup: 'Недійсний файл резервної копії',
+      allDataCleared: 'Усі дані очищено',
+      clearConfirm1: 'Це видалить УСІ ваші дані. Ви впевнені?',
+      clearConfirm2: 'Справді? Це незворотна дія!',
+      // Language
+      language: 'Мова', english: 'English', ukrainian: 'Українська',
+      // Notifications
+      notifications: 'Сповіщення', markAllRead: 'Позначити все прочитаним', noNotifications: 'Немає сповіщень',
+      upcomingBirthday: 'Наближається день народження', packageRunningLow: 'Пакет закінчується',
+      // Search
+      searchPlaceholder: 'Пошук учнів, уроків...', noResults: 'Нічого не знайдено',
+      // Misc
+      signedInAs: 'Ви увійшли як', tutor: 'Репетитор', signOut: 'Вийти',
+      signInTitle: 'Ласкаво просимо до TutorPro', signInSub: 'Увійдіть через Google, щоб керувати учнями, розкладом та фінансами.',
+      signInBtn: 'Увійти через Google',
+      debtLabel: 'Борг', moreLessons: 'ще',
+      mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Нд',
+    }
+  };
+  const getLang = () => (getSettings().lang || 'en');
+  const t = (key) => (I18N[getLang()] && I18N[getLang()][key]) || I18N.en[key] || key;
+  const setLang = (lang) => { const s = getSettings(); store.saveSettings({ ...s, lang }); document.documentElement.lang = lang; const handler = Router.routes[Router.current] || Router.routes['dashboard']; handler(Router.params); };
+  const langSelector = () => `<select onchange="setLang(this.value)" class="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs"><option value="en" ${getLang()==='en'?'selected':''}>${t('english')}</option><option value="uk" ${getLang()==='uk'?'selected':''}>${t('ukrainian')}</option></select>`;
+
+  // ==================== FIREBASE INIT ====================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdhLiABSBWjvepHEDToZSw0X_nDDeI3Q0",
+    authDomain: "tutorsite-f6fe7.firebaseapp.com",
+    projectId: "tutorsite-f6fe7",
+    storageBucket: "tutorsite-f6fe7.firebasestorage.app",
+    messagingSenderId: "309139314169",
+    appId: "1:309139314169:web:9187c70855439aaeb59928",
+    measurementId: "G-DVYJMCVPST"
+  };
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  const db = firebase.firestore();
+
+  // ==================== STORE (Firestore + local cache) ====================
+  const COLLECTIONS = ['students', 'lessons', 'packages', 'payments', 'materials', 'notifications'];
+
+  // Helper to get scoped collection ref
+  const userCol = (uid, col) => db.collection('users').doc(uid).collection(col);
+  const userDoc = (uid, col, id) => userCol(uid, col).doc(id);
+  const userSettings = (uid) => db.doc('users/' + uid + '/settings/app');
+
+  class Store {
+    constructor() {
+      this._cache = { settings: {} };
+      COLLECTIONS.forEach(c => this._cache[c] = []);
+      this._unsubs = [];
+      this._uid = null;
+    }
+
+    async init(uid) {
+      this._uid = uid;
+      const col = (c) => userCol(uid, c);
+      const settingsRef = userSettings(uid);
+
+      // Load all collections from Firestore into cache + attach listeners
+      const loadCollection = (name) => {
+        return col(name).get().then(snapshot => {
+          this._cache[name] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          // Real-time listener
+          const unsub = col(name).onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+              const data = { id: change.doc.id, ...change.doc.data() };
+              const idx = this._cache[name].findIndex(i => i.id === change.doc.id);
+              if (change.type === 'added' || change.type === 'modified') {
+                if (idx >= 0) this._cache[name][idx] = data;
+                else this._cache[name].push(data);
+              } else if (change.type === 'removed') {
+                if (idx >= 0) this._cache[name].splice(idx, 1);
+              }
+            });
+            EventBus.emit(name + 'Changed');
+          });
+          this._unsubs.push(unsub);
+        });
+      };
+
+      await Promise.all(COLLECTIONS.map(loadCollection));
+
+      // Load settings
+      try {
+        const settingsSnap = await settingsRef.get();
+        if (settingsSnap.exists) this._cache.settings = settingsSnap.data();
+      } catch(e) { /* settings doc may not exist yet */ }
+
+      // Listen for remote settings changes
+      const settingsUnsub = settingsRef.onSnapshot(snap => {
+        if (snap.exists) {
+          this._cache.settings = snap.data();
+          EventBus.emit('settingsChanged');
+        }
+      });
+      this._unsubs.push(settingsUnsub);
+
+      // Re-apply theme after loading remote settings
+      applyTheme();
+    }
+
+    cleanup() {
+      this._unsubs.forEach(u => u());
+      this._unsubs = [];
+    }
+
+    getAll(collection) { return this._cache[collection] || []; }
+    getById(collection, id) { return (this._cache[collection] || []).find(i => i.id === id) || null; }
+    getSettings() { return this._cache.settings || {}; }
+
+    saveSettings(s) {
+      this._cache.settings = s;
+      userSettings(this._uid).set(s);
+      EventBus.emit('settingsChanged');
+    }
+
+    create(collection, item) {
+      const id = item.id || uuid();
+      const now = new Date().toISOString();
+      const data = { ...item, id, createdAt: item.createdAt || now };
+      this._cache[collection] = this._cache[collection] || [];
+      this._cache[collection].push(data);
+      EventBus.emit(collection + 'Changed');
+      userDoc(this._uid, collection, id).set(data);
+      return data;
+    }
+
+    update(collection, id, updates) {
+      const items = this._cache[collection] || [];
+      const idx = items.findIndex(i => i.id === id);
+      if (idx === -1) return null;
+      const now = new Date().toISOString();
+      const updated = { ...items[idx], ...updates, updatedAt: now };
+      items[idx] = updated;
+      EventBus.emit(collection + 'Changed');
+      userDoc(this._uid, collection, id).update(updates);
+      return updated;
+    }
+
+    delete(collection, id) {
+      this._cache[collection] = (this._cache[collection] || []).filter(i => i.id !== id);
+      EventBus.emit(collection + 'Changed');
+      userDoc(this._uid, collection, id).delete();
+    }
+
+    exportAll() {
+      const data = {};
+      for (const col of COLLECTIONS) data[col] = this._cache[col];
+      data.settings = this._cache.settings;
+      return data;
+    }
+
+    async importAll(data) {
+      const writes = [];
+      for (const [key, val] of Object.entries(data)) {
+        if (key === 'settings' && typeof val === 'object') {
+          this._cache.settings = val;
+          writes.push(userSettings(this._uid).set(val));
+        } else if (COLLECTIONS.includes(key) && Array.isArray(val)) {
+          this._cache[key] = val;
+          val.forEach(item => {
+            if (item.id) writes.push(userDoc(this._uid, key, item.id).set(item));
+          });
+        }
+      }
+      await Promise.all(writes);
+      EventBus.emit('dataImported');
+    }
+  }
+
+  const store = new Store();
+
+  // ==================== EVENT BUS ====================
+  const EventBus = {
+    _listeners: {},
+    on(event, fn) { (this._listeners[event] = this._listeners[event] || []).push(fn); },
+    off(event, fn) { if (this._listeners[event]) this._listeners[event] = this._listeners[event].filter(f => f !== fn); },
+    emit(event, data) { (this._listeners[event] || []).forEach(fn => fn(data)); }
+  };
+
+  // ==================== ROUTER ====================
+  const Router = {
+    routes: {},
+    current: null,
+    params: {},
+    register(hash, handler) { this.routes[hash] = handler; },
+    navigate(hash) { window.location.hash = hash; },
+    start() {
+      const handleRoute = () => {
+        const hash = window.location.hash.slice(1) || 'dashboard';
+        const parts = hash.split('/');
+        const base = parts[0];
+        this.params = { id: parts[1] || null };
+        this.current = base;
+        const handler = this.routes[base] || this.routes['dashboard'];
+        handler(this.params);
+      };
+      window.addEventListener('hashchange', handleRoute);
+      handleRoute();
+    }
+  };
+
+  // ==================== TOAST ====================
+  const Toast = {
+    show(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.textContent = msg;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    },
+    success(msg) { this.show(msg, 'success'); },
+    error(msg) { this.show(msg, 'error'); },
+    info(msg) { this.show(msg, 'info'); }
+  };
+
+  // ==================== MODAL ====================
+  const Modal = {
+    open(content, opts = {}) {
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `<div class="modal-overlay active" id="modal-overlay"><div class="modal-content bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full ${opts.size === 'lg' ? 'max-w-2xl' : opts.size === 'xl' ? 'max-w-4xl' : 'max-w-md'} mx-4 p-6">${content}</div></div>`;
+      document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'modal-overlay') this.close(); });
+    },
+    close() {
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay) { overlay.classList.remove('active'); setTimeout(() => document.getElementById('modal-root').innerHTML = '', 200); }
+    }
+  };
+
+  // ==================== SVG ICONS ====================
+  const Icons = {
+    home: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    users: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    calendar: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`,
+    dollar: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+    book: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>`,
+    settings: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    plus: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>`,
+    x: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+    search: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+    bell: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
+    menu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
+    chevronLeft: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
+    chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+    chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
+    edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`,
+    trash: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+    check: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+    sun: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+    download: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`,
+    upload: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>`,
+    package: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`,
+    arrowLeft: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
+    link: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+    file: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+    logout: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>`,
+    google: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 .5 24c0 3.77.87 7.35 2.56 10.56l7.48-5.97z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`,
+  };
+
+  // ==================== SETTINGS HELPER ====================
+  const getSettings = () => ({ name: 'Tutor', currency: 'UAH', theme: 'light', ...store.getSettings() });
+  const applyTheme = () => {
+    const s = getSettings();
+    document.documentElement.classList.toggle('dark', s.theme === 'dark');
+  };
+  applyTheme();
+
+  // ==================== NOTIFICATIONS ENGINE ====================
+  const NotificationEngine = {
+    generate() {
+      const students = store.getAll('students');
+      const packages = store.getAll('packages');
+      const lessons = store.getAll('lessons');
+      const existing = store.getAll('notifications');
+      const newNotifs = [];
+
+      // Birthday alerts
+      students.forEach(s => {
+        const days = getDaysUntilBirthday(s.dateOfBirth);
+        if (days !== null && days <= 7) {
+          const exists = existing.find(n => n.type === 'birthday' && n.relatedId === s.id && (new Date() - new Date(n.createdAt)) < 86400000);
+          if (!exists) {
+            newNotifs.push({ id: uuid(), type: 'birthday', title: 'Upcoming Birthday', message: `${s.name}'s birthday ${days === 0 ? 'is today!' : `in ${days} day${days>1?'s':''}`}`, isRead: false, relatedEntity: 'student', relatedId: s.id, createdAt: new Date().toISOString() });
+          }
+        }
+      });
+
+      // Package ending alerts
+      packages.filter(p => p.status === 'active').forEach(p => {
+        const remaining = p.totalLessons - p.usedLessons;
+        if (remaining <= 2 && remaining > 0) {
+          const student = students.find(s => s.id === p.studentId);
+          const exists = existing.find(n => n.type === 'package_ending' && n.relatedId === p.id && (new Date() - new Date(n.createdAt)) < 86400000);
+          if (!exists && student) {
+            newNotifs.push({ id: uuid(), type: 'package_ending', title: 'Package Running Low', message: `${student.name} has ${remaining} lesson${remaining>1?'s':''} left in package`, isRead: false, relatedEntity: 'package', relatedId: p.id, createdAt: new Date().toISOString() });
+          }
+        }
+      });
+
+      // Debt alerts
+      const payments = store.getAll('payments');
+      const debts = payments.filter(p => p.status === 'debt');
+      if (debts.length > 0) {
+        const exists = existing.find(n => n.type === 'debt' && (new Date() - new Date(n.createdAt)) < 86400000);
+        if (!exists) {
+          const totalDebt = debts.reduce((sum, d) => sum + d.amount, 0);
+          newNotifs.push({ id: uuid(), type: 'debt', title: 'Outstanding Debts', message: `Total debt: ${formatCurrency(totalDebt)} across ${debts.length} payment(s)`, isRead: false, relatedEntity: 'payment', relatedId: null, createdAt: new Date().toISOString() });
+        }
+      }
+
+      newNotifs.forEach(n => store.create('notifications', n));
+    },
+    getUnread() { return store.getAll('notifications').filter(n => !n.isRead); },
+    markAllRead() {
+      store.getAll('notifications').forEach(n => store.update('notifications', n.id, { isRead: true }));
+    }
+  };  // ==================== APP SHELL (Sidebar + TopBar) ====================
+  const AppShell = {
+    render(content) {
+      const notifs = NotificationEngine.getUnread();
+      const s = getSettings();
+      document.getElementById('app').innerHTML = `
+      <div class="flex h-screen overflow-hidden">
+        <!-- Mobile overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.add('hidden')"></div>
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex flex-col z-50">
+          <div class="p-5 flex items-center gap-3">
+            <div class="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-white font-bold">T</div>
+            <span class="text-lg font-bold gradient-text">TutorPro</span>
+          </div>
+          <nav class="flex-1 px-3 space-y-1">
+            ${[
+              { hash: 'dashboard', icon: Icons.home, label: t('dashboard') },
+              { hash: 'students', icon: Icons.users, label: t('students') },
+              { hash: 'calendar', icon: Icons.calendar, label: t('calendar') },
+              { hash: 'payments', icon: Icons.dollar, label: t('payments') },
+              { hash: 'materials', icon: Icons.book, label: t('materialsTitle') },
+              { hash: 'settings', icon: Icons.settings, label: t('settingsTitle') }
+            ].map(l => `
+              <a href="#${l.hash}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${Router.current === l.hash ? 'active' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}">
+                ${l.icon}<span>${l.label}</span>
+              </a>
+            `).join('')}
+          </nav>            <div class="p-4 border-t border-slate-100 dark:border-slate-700">
+              <div class="flex items-center gap-3">
+                ${firebase.auth().currentUser && firebase.auth().currentUser.photoURL
+                  ? `<img src="${firebase.auth().currentUser.photoURL}" class="w-9 h-9 rounded-full" alt="avatar">`
+                  : `<div class="w-9 h-9 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-bold">${(firebase.auth().currentUser?.displayName || 'T').charAt(0)}</div>`
+                }
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs text-slate-400">${t('signedInAs')}</div>
+                  <div class="text-sm font-semibold truncate">${firebase.auth().currentUser?.displayName || s.name || t('tutor')}</div>
+                </div>
+              </div>
+              <button onclick="signOut()" class="mt-2 w-full text-xs text-slate-400 hover:text-red-500 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">${Icons.logout || '↩'} ${t('signOut')}</button>
+            </div>
+        </aside>
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <!-- TopBar -->
+          <header class="flex items-center justify-between px-4 md:px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg">
+            <div class="flex items-center gap-3">
+              <button onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('hidden')" class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">${Icons.menu}</button>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">${Icons.search}</span>
+                <input type="text" id="global-search" placeholder="${t('searchPlaceholder')}" class="pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-48 md:w-64" oninput="AppShell.handleSearch(this.value)">
+                <div id="search-results" class="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 hidden z-50 max-h-64 overflow-y-auto"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${langSelector()}
+              <button onclick="toggleTheme()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition">${s.theme === 'dark' ? Icons.sun : Icons.moon}</button>
+              <button onclick="AppShell.showNotifications()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 relative transition">
+                ${Icons.bell}
+                ${notifs.length > 0 ? `<span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">${notifs.length}</span>` : ''}
+              </button>
+            </div>
+          </header>
+          <!-- Page content -->
+          <main class="flex-1 overflow-y-auto p-4 md:p-6" id="page-content">
+            ${content}
+          </main>
+        </div>
+      </div>`;
+    },
+    handleSearch(query) {
+      const results = document.getElementById('search-results');
+      if (!query || query.length < 2) { results.classList.add('hidden'); return; }
+      const q = query.toLowerCase();
+      const students = store.getAll('students').filter(s => s.name.toLowerCase().includes(q));
+      const lessons = store.getAll('lessons').filter(l => (l.title||'').toLowerCase().includes(q));
+      let html = '';
+      if (students.length) {
+        html += `<div class="p-2 text-xs font-semibold text-slate-400 uppercase">${t('students')}</div>`;
+        students.slice(0,5).forEach(s => { html += `<a href="#student/${s.id}" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer rounded-lg"><div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-xs font-bold">${s.name.charAt(0)}</div><span class="text-sm">${s.name}</span></a>`; });
+      }
+      if (lessons.length) {
+        html += `<div class="p-2 text-xs font-semibold text-slate-400 uppercase">${t('lessons')}</div>`;
+        lessons.slice(0,5).forEach(l => { const st = store.getById('students', l.studentId); html += `<div class="px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer rounded-lg text-sm" onclick="Router.navigate('calendar')">${l.title || t('lesson')} — ${st ? st.name : t('unknown')}</div>`; });
+      }
+      if (!html) html = `<div class="p-4 text-sm text-slate-400 text-center">${t('noResults')}</div>`;
+      results.innerHTML = html;
+      results.classList.remove('hidden');
+    },
+    showNotifications() {
+      NotificationEngine.generate();
+      const notifs = store.getAll('notifications').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      Modal.open(`
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">${t('notifications')}</h3>
+          <button onclick="NotificationEngine.markAllRead();Modal.close();Router.navigate(Router.current)" class="text-sm text-primary-500 hover:underline">${t('markAllRead')}</button>
+        </div>
+        <div class="space-y-2 max-h-80 overflow-y-auto">
+          ${notifs.length === 0 ? `<p class="text-sm text-slate-400 text-center py-4">${t('noNotifications')}</p>` : notifs.map(n => `
+            <div class="p-3 rounded-xl ${n.isRead ? 'bg-slate-50 dark:bg-slate-700/50' : 'bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800'}">
+              <div class="font-semibold text-sm">${n.title}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">${n.message}</div>
+              <div class="text-xs text-slate-400 mt-1">${formatDateTime(n.createdAt)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `);
+    }
+  };
+
+  const toggleTheme = () => {
+    const s = getSettings();
+    store.saveSettings({ ...s, theme: s.theme === 'dark' ? 'light' : 'dark' });
+    applyTheme();
+    const handler = Router.routes[Router.current] || Router.routes['dashboard'];
+    handler(Router.params);
+  };
+
+  // ==================== LOGIN VIEW ====================
+  const LoginView = {
+    render() {
+      document.getElementById('app').innerHTML = `
+      <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <div class="blobs fixed inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute w-96 h-96 bg-primary-500/10 rounded-full blur-3xl -top-20 -right-20"></div>
+          <div class="absolute w-80 h-80 bg-accent-500/10 rounded-full blur-3xl -bottom-20 -left-20"></div>
+        </div>
+        <div class="glass-card max-w-md w-full p-10 text-center relative z-10">
+          <div class="w-16 h-16 mx-auto gradient-bg rounded-2xl flex items-center justify-center text-white text-2xl font-bold mb-6">T</div>
+          <h1 class="text-2xl font-extrabold mb-2 gradient-text">TutorPro</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">${t('signInSub')}</p>
+          <button onclick="LoginView.signInWithGoogle()" class="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 transition font-medium text-sm">
+            ${Icons.google}
+            <span>${t('signInBtn')}</span>
+          </button>
+          <div class="mt-8 text-xs text-slate-400">
+            ${langSelector()}
+          </div>
+        </div>
+      </div>`;
+    },
+    signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).catch(err => {
+        Toast.error(err.message);
+      });
+    }
+  };
+
+  // ==================== SIGN OUT ====================
+  const signOut = () => {
+    if (confirm(t('signOut') + '?')) {
+      store.cleanup();
+      firebase.auth().signOut();
+    }
+  };
+
+  // ==================== DASHBOARD VIEW ====================
+  const DashboardView = {
+    chartInstances: [],
+    render() {
+      this.chartInstances.forEach(c => c.destroy());
+      this.chartInstances = [];
+      const students = store.getAll('students').filter(s => s.isActive !== false);
+      const lessons = store.getAll('lessons');
+      const payments = store.getAll('payments');
+      const packages = store.getAll('packages').filter(p => p.status === 'active');
+      const todayLessons = lessons.filter(l => isToday(l.startAt));
+      const weekLessons = lessons.filter(l => isThisWeek(l.startAt));
+      const monthIncome = payments.filter(p => p.status === 'paid' && isThisMonth(p.paidAt)).reduce((s, p) => s + Number(p.amount), 0);
+      const weekIncome = payments.filter(p => p.status === 'paid' && isThisWeek(p.paidAt)).reduce((s, p) => s + Number(p.amount), 0);
+      const settings = getSettings();
+
+      const content = `
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold">${t('dashboard')}</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">${t('welcomeBack')}, ${settings.name || t('tutor')}!</p>
+        </div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="text-xs text-slate-400 mb-1">${t('todaysLessons')}</div>
+            <div class="text-3xl font-bold gradient-text">${todayLessons.length}</div>
+            <div class="text-xs text-slate-400 mt-1">${weekLessons.length} ${t('thisWeek')}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="text-xs text-slate-400 mb-1">${t('students')}</div>
+            <div class="text-3xl font-bold gradient-text">${students.length}</div>
+            <div class="text-xs text-slate-400 mt-1">${packages.length} ${t('activePackages')}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="text-xs text-slate-400 mb-1">${t('monthlyIncome')}</div>
+            <div class="text-3xl font-bold gradient-text">${formatCurrency(monthIncome, settings.currency)}</div>
+            <div class="text-xs text-slate-400 mt-1">${formatCurrency(weekIncome, settings.currency)} ${t('thisWeek')}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="text-xs text-slate-400 mb-1">${t('completedMonth')}</div>
+            <div class="text-3xl font-bold gradient-text">${lessons.filter(l => l.status === 'completed' && isThisMonth(l.startAt)).length}</div>
+            <div class="text-xs text-slate-400 mt-1">${lessons.filter(l => l.status === 'cancelled' && isThisMonth(l.startAt)).length} ${t('cancelled')}</div>
+          </div>
+        </div>
+        <!-- Charts -->
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <h3 class="font-semibold mb-4 text-sm">${t('incomeChartTitle')}</h3>
+            <canvas id="incomeChart" height="200"></canvas>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <h3 class="font-semibold mb-4 text-sm">${t('workloadChartTitle')}</h3>
+            <canvas id="workloadChart" height="200"></canvas>
+          </div>
+        </div>
+        <!-- Today's Lessons + Alerts -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <h3 class="font-semibold mb-4 text-sm">${t('todaysLessons')}</h3>
+            ${todayLessons.length === 0 ? `<p class="text-sm text-slate-400">${t('noLessonsMonth')}</p>` : todayLessons.map(l => {
+              const st = store.getById('students', l.studentId);
+              return `<div class="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                <div>
+                  <div class="font-medium text-sm">${st ? st.name : t('unknown')}</div>
+                  <div class="text-xs text-slate-400">${formatTime(l.startAt)} - ${formatTime(l.endAt)}</div>
+                </div>
+                <span class="badge badge-${l.status}">${l.status}</span>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <h3 class="font-semibold mb-4 text-sm">${t('alertsTitle')}</h3>
+            <div class="space-y-2">
+              ${packages.filter(p => (p.totalLessons - p.usedLessons) <= 2).map(p => {
+                const st = store.getById('students', p.studentId);
+                return `<div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-xs"><strong>${st ? st.name : t('unknown')}</strong>: ${p.totalLessons - p.usedLessons} ${t('lessonsLeft')}</div>`;
+              }).join('')}
+              ${students.filter(s => { const d = getDaysUntilBirthday(s.dateOfBirth); return d !== null && d <= 7; }).map(s => {
+                const d = getDaysUntilBirthday(s.dateOfBirth);
+                return `<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs">🎂 <strong>${s.name}</strong> — ${t('upcomingBirthday')} ${d === 0 ? t('birthdayToday') : `${t('birthdayIn')} ${d} ${t('days')}`}</div>`;
+              }).join('')}
+              ${payments.filter(p => p.status === 'debt').length > 0 ? `<div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-xs">💰 ${payments.filter(p => p.status === 'debt').length} ${t('outstandingDebts')}: ${formatCurrency(payments.filter(p => p.status === 'debt').reduce((s,p) => s + Number(p.amount), 0), settings.currency)}</div>` : ''}
+              ${packages.filter(p => (p.totalLessons - p.usedLessons) <= 2).length === 0 && students.filter(s => { const d = getDaysUntilBirthday(s.dateOfBirth); return d !== null && d <= 7; }).length === 0 && payments.filter(p => p.status === 'debt').length === 0 ? `<p class="text-sm text-slate-400">${t('noAlerts')}</p>` : ''}
+            </div>
+          </div>
+        </div>`;
+
+      AppShell.render(content);
+      this.renderCharts(payments, lessons, students, settings);
+    },
+    renderCharts(payments, lessons, students, settings) {
+      // Income bar chart (last 6 months)
+      const incomeCtx = document.getElementById('incomeChart');
+      if (incomeCtx) {
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(); d.setMonth(d.getMonth() - i);
+          months.push({ label: d.toLocaleString('en', { month: 'short' }), month: d.getMonth(), year: d.getFullYear() });
+        }
+        const incomeData = months.map(m => payments.filter(p => p.status === 'paid' && new Date(p.paidAt).getMonth() === m.month && new Date(p.paidAt).getFullYear() === m.year).reduce((s, p) => s + Number(p.amount), 0));
+        const isDark = getSettings().theme === 'dark';
+        this.chartInstances.push(new Chart(incomeCtx, {
+          type: 'bar',
+          data: { labels: months.map(m => m.label), datasets: [{ label: t('income'), data: incomeData, backgroundColor: 'rgba(0,123,255,0.3)', borderColor: '#007BFF', borderWidth: 2, borderRadius: 8 }] },
+          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#f1f5f9' }, ticks: { color: isDark ? '#94a3b8' : '#64748b' } }, x: { grid: { display: false }, ticks: { color: isDark ? '#94a3b8' : '#64748b' } } } }
+        }));
+      }
+      // Workload pie
+      const workloadCtx = document.getElementById('workloadChart');
+      if (workloadCtx) {
+        const studentLessonCounts = {};
+        lessons.filter(l => l.status === 'completed' && isThisMonth(l.startAt)).forEach(l => {
+          const st = store.getById('students', l.studentId);
+          const name = st ? st.name : t('unknown');
+          studentLessonCounts[name] = (studentLessonCounts[name] || 0) + 1;
+        });
+        const labels = Object.keys(studentLessonCounts).slice(0, 6);
+        const data = labels.map(l => studentLessonCounts[l]);
+        const colors = ['#007BFF', '#00D4FF', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        const isDark = getSettings().theme === 'dark';
+        if (labels.length > 0) {
+          this.chartInstances.push(new Chart(workloadCtx, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: isDark ? '#94a3b8' : '#64748b', padding: 12, font: { size: 11 } } } } }
+          }));
+        } else {
+          workloadCtx.parentElement.innerHTML += `<p class="text-sm text-slate-400 text-center mt-4">${t('noLessonsMonth')}</p>`;
+        }
+      }
+    }
+  };
+
+  // ==================== STUDENTS VIEW ====================
+  const StudentsView = {
+    render() {
+      const students = store.getAll('students');
+      const settings = getSettings();
+      const content = `
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">${t('students')}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${students.length} ${t('students')}</p>
+          </div>
+          <button onclick="StudentsView.openForm()" class="gradient-bg text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition">${Icons.plus} ${t('addStudent')}</button>
+        </div>
+        ${students.length === 0 ? `
+          <div class="text-center py-16">
+            <div class="w-16 h-16 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-white opacity-50">${Icons.users}</div>
+            <h3 class="text-lg font-semibold mb-2">${t('noStudentsYet')}</h3>
+            <p class="text-sm text-slate-400 mb-4">${t('addFirstStudent')}</p>
+            <button onclick="StudentsView.openForm()" class="gradient-bg text-white px-4 py-2 rounded-xl text-sm font-semibold">${Icons.plus} ${t('addStudent')}</button>
+          </div>
+        ` : `
+          <div class="mb-4">
+            <input type="text" id="student-search" placeholder="${t('searchStudents')}" class="w-full md:w-64 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" oninput="StudentsView.filter(this.value)">
+          </div>
+          <div class="grid gap-3" id="students-list">
+            ${students.map(s => this.renderCard(s, settings)).join('')}
+          </div>
+        `}`;
+      AppShell.render(content);
+    },
+    renderCard(s, settings) {
+      const pkg = store.getAll('packages').find(p => p.studentId === s.id && p.status === 'active');
+      const debt = store.getAll('payments').filter(p => p.studentId === s.id && p.status === 'debt').reduce((sum, p) => sum + Number(p.amount), 0);
+      return `<div class="student-card bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4" data-name="${s.name.toLowerCase()}" onclick="Router.navigate('student/${s.id}')">
+        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">${s.name.charAt(0)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold truncate">${s.name}</div>
+          <div class="text-xs text-slate-400">${s.level || t('noLevel')} ${s.goal ? '· ' + s.goal : ''}</div>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <div class="text-sm font-semibold">${formatCurrency(s.pricePerLesson || 0, settings.currency)}</div>
+          ${pkg ? `<div class="text-xs text-primary-500">${pkg.totalLessons - pkg.usedLessons}/${pkg.totalLessons} ${t('lessons')}</div>` : ''}
+          ${debt > 0 ? `<div class="text-xs text-red-500">${t('debtLabel')}: ${formatCurrency(debt, settings.currency)}</div>` : ''}
+        </div>
+        <div class="flex gap-1 flex-shrink-0">
+          <button onclick="event.stopPropagation();StudentsView.openForm('${s.id}')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">${Icons.edit}</button>
+          <button onclick="event.stopPropagation();StudentsView.deleteStudent('${s.id}')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500">${Icons.trash}</button>
+        </div>
+      </div>`;
+    },
+    filter(query) {
+      const q = query.toLowerCase();
+      document.querySelectorAll('.student-card').forEach(card => {
+        card.style.display = card.dataset.name.includes(q) ? '' : 'none';
+      });
+    },
+    openForm(id = null) {
+      const s = id ? store.getById('students', id) : null;
+      Modal.open(`
+        <h3 class="text-lg font-bold mb-4">${s ? t('editStudent') : t('addStudentTitle')}</h3>
+        <form onsubmit="event.preventDefault();StudentsView.save('${id || ''}')" class="space-y-3">
+          <div><label class="text-xs font-semibold text-slate-500">${t('name')} *</label><input name="name" required value="${s ? s.name : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('phone')}</label><input name="phone" value="${s ? s.phone || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('email')}</label><input name="email" type="email" value="${s ? s.email || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('level')}</label><select name="level" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"><option value="" ${s && !s.level ? 'selected' : ''}>${t('select')}</option><option value="beginner" ${s && s.level === 'beginner' ? 'selected' : ''}>${t('beginner')}</option><option value="intermediate" ${s && s.level === 'intermediate' ? 'selected' : ''}>${t('intermediate')}</option><option value="advanced" ${s && s.level === 'advanced' ? 'selected' : ''}>${t('advanced')}</option></select></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('pricePerLesson')}</label><input name="pricePerLesson" type="number" min="0" value="${s ? s.pricePerLesson || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('dateOfBirth')}</label><input name="dateOfBirth" type="date" value="${s ? s.dateOfBirth || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('telegram')}</label><input name="telegram" value="${s ? s.telegram || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          </div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('learningGoal')}</label><input name="goal" value="${s ? s.goal || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('notes')}</label><textarea name="notes" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">${s ? s.notes || '' : ''}</textarea></div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="flex-1 gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${s ? t('update') : t('add')}</button>
+            <button type="button" onclick="Modal.close()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm">${t('cancel')}</button>
+          </div>
+        </form>
+      `);
+    },
+    save(id) {
+      const form = document.querySelector('.modal-content form');
+      const data = Object.fromEntries(new FormData(form));
+      data.pricePerLesson = Number(data.pricePerLesson) || 0;
+      if (id) {
+        store.update('students', id, data);
+        Toast.success(t('studentUpdated'));
+      } else {
+        const student = store.create('students', { ...data, isActive: true });
+        Toast.success(t('studentAdded'));
+        Modal.close();
+        Router.navigate('student/' + student.id);
+        return;
+      }
+      Modal.close();
+      Router.navigate('students');
+    },
+    deleteStudent(id) {
+      if (confirm(t('deleteConfirm'))) {
+        store.delete('students', id);
+        Toast.success(t('studentDeleted'));
+        Router.navigate('students');
+      }
+    }
+  };
+
+  // ==================== STUDENT PROFILE VIEW ====================
+  const StudentProfileView = {
+    activeTab: 'info',
+    render(id) {
+      const s = store.getById('students', id);
+      if (!s) { Router.navigate('students'); return; }
+      const settings = getSettings();
+      const packages = store.getAll('packages').filter(p => p.studentId === id);
+      const payments = store.getAll('payments').filter(p => p.studentId === id);
+      const lessons = store.getAll('lessons').filter(l => l.studentId === id);
+      const balance = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0) - payments.filter(p => p.status === 'debt').reduce((sum, p) => sum + Number(p.amount), 0);
+      const activePkg = packages.find(p => p.status === 'active');
+      const tabs = ['info', 'packages', 'payments', 'lessons'];
+
+      const content = `
+        <button onclick="Router.navigate('students')" class="flex items-center gap-1 text-sm text-slate-500 hover:text-primary-500 mb-4">${Icons.arrowLeft} ${t('backToStudents')}</button>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center text-white font-bold text-2xl">${s.name.charAt(0)}</div>
+          <div>
+            <h1 class="text-2xl font-bold">${s.name}</h1>
+            <div class="text-sm text-slate-500 dark:text-slate-400">${s.level || ''} ${s.goal ? '· ' + s.goal : ''}</div>
+          </div>
+          <div class="ml-auto flex gap-2">
+            <button onclick="StudentsView.openForm('${id}')" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.edit}</button>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 text-center">
+            <div class="text-xs text-slate-400">${t('pricePerLesson')}</div>
+            <div class="text-lg font-bold">${formatCurrency(s.pricePerLesson || 0, settings.currency)}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 text-center">
+            <div class="text-xs text-slate-400">${t('totalLessons')}</div>
+            <div class="text-lg font-bold">${lessons.filter(l => l.status === 'completed').length}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 text-center">
+            <div class="text-xs text-slate-400">${t('activePackage')}</div>
+            <div class="text-lg font-bold">${activePkg ? (activePkg.totalLessons - activePkg.usedLessons) + '/' + activePkg.totalLessons : '—'}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 text-center">
+            <div class="text-xs text-slate-400">${t('balance')}</div>
+            <div class="text-lg font-bold ${balance < 0 ? 'text-red-500' : 'text-green-500'}">${formatCurrency(balance, settings.currency)}</div>
+          </div>
+        </div>
+        <!-- Tabs -->
+        <div class="flex gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+          ${tabs.map(t => `<button onclick="StudentProfileView.activeTab='${t}';Router.navigate('student/${id}')" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${this.activeTab === t ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-500' : 'text-slate-500 hover:text-slate-700'}">${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}
+        </div>
+        <div id="profile-tab-content">${this.renderTab(id, s, packages, payments, lessons, settings)}</div>`;
+      AppShell.render(content);
+    },
+    renderTab(id, s, packages, payments, lessons, settings) {
+      switch (this.activeTab) {
+        case 'info': return `
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 space-y-3">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div><span class="text-slate-400">${t('phone')}:</span> <span class="font-medium">${s.phone || '—'}</span></div>
+              <div><span class="text-slate-400">${t('email')}:</span> <span class="font-medium">${s.email || '—'}</span></div>
+              <div><span class="text-slate-400">${t('telegram')}:</span> <span class="font-medium">${s.telegram || '—'}</span></div>
+              <div><span class="text-slate-400">${t('birthday')}:</span> <span class="font-medium">${s.dateOfBirth ? formatDate(s.dateOfBirth) : '—'}</span></div>
+              <div><span class="text-slate-400">${t('level')}:</span> <span class="font-medium">${s.level || '—'}</span></div>
+              <div><span class="text-slate-400">${t('goal')}:</span> <span class="font-medium">${s.goal || '—'}</span></div>
+            </div>
+            ${s.notes ? `<div class="pt-3 border-t border-slate-100 dark:border-slate-700"><span class="text-slate-400 text-sm">${t('notes')}:</span><p class="text-sm mt-1">${s.notes}</p></div>` : ''}
+          </div>`;
+        case 'packages': return `
+          <div class="flex justify-end mb-3"><button onclick="StudentProfileView.addPackage('${id}')" class="gradient-bg text-white px-3 py-1.5 rounded-xl text-sm font-semibold flex items-center gap-1">${Icons.plus} ${t('newPackage')}</button></div>
+          ${packages.length === 0 ? `<p class="text-sm text-slate-400 text-center py-8">${t('noPackagesYet')}</p>` : packages.map(p => `
+            <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 mb-2">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-semibold text-sm">${p.totalLessons} ${t('lessons')} · ${formatCurrency(p.pricePaid, settings.currency)}</div>
+                  <div class="text-xs text-slate-400">${formatCurrency(p.pricePerLesson, settings.currency)}${t('perLesson')} · ${t('purchased')} ${formatDate(p.purchasedAt)}</div>
+                </div>
+                <div class="text-right">
+                  <span class="badge ${p.status === 'active' ? 'badge-completed' : 'badge-cancelled'}">${p.status}</span>
+                  <div class="text-xs text-slate-400 mt-1">${p.usedLessons}/${p.totalLessons} ${t('used')}</div>
+                </div>
+              </div>
+              <div class="mt-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2"><div class="gradient-bg h-2 rounded-full" style="width:${(p.usedLessons/p.totalLessons)*100}%"></div></div>
+            </div>
+          `).join('')}`;
+        case 'payments': return `
+          <div class="flex justify-end mb-3"><button onclick="PaymentsView.openForm(null, '${id}')" class="gradient-bg text-white px-3 py-1.5 rounded-xl text-sm font-semibold flex items-center gap-1">${Icons.plus} ${t('recordPayment')}</button></div>
+          ${payments.length === 0 ? `<p class="text-sm text-slate-400 text-center py-8">${t('noPaymentsYet')}</p>` : `<div class="space-y-2">${payments.sort((a,b) => new Date(b.paidAt) - new Date(a.paidAt)).map(p => `
+            <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <div>
+                <div class="font-semibold text-sm">${formatCurrency(p.amount, settings.currency)}</div>
+                <div class="text-xs text-slate-400">${p.type} · ${p.method || ''} · ${formatDate(p.paidAt)}</div>
+              </div>
+              <span class="badge ${p.status === 'paid' ? 'badge-completed' : p.status === 'debt' ? 'badge-cancelled' : 'badge-absent'}">${p.status}</span>
+            </div>
+          `).join('')}</div>`}`;
+        case 'lessons': return `
+          ${lessons.length === 0 ? `<p class="text-sm text-slate-400 text-center py-8">${t('noLessonsYet')}</p>` : `<div class="space-y-2">${lessons.sort((a,b) => new Date(b.startAt) - new Date(a.startAt)).map(l => `
+            <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <div>
+                <div class="font-semibold text-sm">${l.title || t('lesson')}</div>
+                <div class="text-xs text-slate-400">${formatDateTime(l.startAt)} — ${formatTime(l.endAt)}</div>
+              </div>
+              <span class="badge badge-${l.status}">${l.status}</span>
+            </div>
+          `).join('')}</div>`}`;
+      }
+    },
+    addPackage(studentId) {
+      Modal.open(`
+        <h3 class="text-lg font-bold mb-4">${t('createPackage')}</h3>
+        <form onsubmit="event.preventDefault();StudentProfileView.savePackage('${studentId}')" class="space-y-3">
+          <div><label class="text-xs font-semibold text-slate-500">${t('numberOfLessons')}</label><input name="totalLessons" type="number" min="1" required value="10" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('totalPricePaid')}</label><input name="pricePaid" type="number" min="0" required class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('expires')}</label><input name="expiresAt" type="date" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
+          <button type="submit" class="w-full gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${t('createPackage')}</button>
+        </form>
+      `);
+    },
+    savePackage(studentId) {
+      const form = document.querySelector('.modal-content form');
+      const data = Object.fromEntries(new FormData(form));
+      const totalLessons = Number(data.totalLessons);
+      const pricePaid = Number(data.pricePaid);
+      const pkg = store.create('packages', { studentId, totalLessons, usedLessons: 0, pricePaid, pricePerLesson: pricePaid / totalLessons, purchasedAt: new Date().toISOString(), expiresAt: data.expiresAt || null, status: 'active' });
+      store.create('payments', { studentId, packageId: pkg.id, amount: pricePaid, type: 'package', status: 'paid', method: 'cash', paidAt: new Date().toISOString() });
+      Toast.success(t('packageCreated'));
+      Modal.close();
+      Router.navigate('student/' + studentId);
+    }
+  };
+
+  // ==================== CALENDAR VIEW ====================
+  const CalendarView = {
+    viewMode: 'week',
+    currentDate: new Date(),
+    render() {
+      const lessons = store.getAll('lessons');
+      const students = store.getAll('students');
+      const content = `
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">${t('calendar')}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${this.currentDate.toLocaleString(getLang()==='uk'?'uk':'en', { month: 'long', year: 'numeric' })}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="CalendarView.navigate(-1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.chevronLeft}</button>
+            <button onclick="CalendarView.currentDate=new Date();CalendarView.render()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">${t('today')}</button>
+            <button onclick="CalendarView.navigate(1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.chevronRight}</button>
+            <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 ml-2">
+              ${['day','week','month'].map(m => `<button onclick="CalendarView.viewMode='${m}';CalendarView.render()" class="px-3 py-1 rounded-lg text-xs font-medium ${this.viewMode === m ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}">${m === 'day' ? t('day') : m === 'week' ? t('week') : t('month')}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+          ${this.viewMode === 'day' ? this.renderDay(lessons, students) : this.viewMode === 'week' ? this.renderWeek(lessons, students) : this.renderMonth(lessons, students)}
+        </div>
+        <button onclick="CalendarView.openForm()" class="fab gradient-bg text-white">${Icons.plus}</button>`;
+      AppShell.render(content);
+    },
+    renderWeek(lessons, students) {
+      const startOfWeek = new Date(this.currentDate);
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+      const hours = Array.from({length: 14}, (_, i) => i + 8);
+      let html = '<div class="overflow-x-auto"><div class="min-w-[700px]">';
+      html += '<div class="grid grid-cols-8 border-b border-slate-100 dark:border-slate-700">';
+      html += '<div class="p-2 text-xs text-slate-400"></div>';
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(startOfWeek);
+        day.setDate(startOfWeek.getDate() + d);
+        const today = isToday(day);
+        html += `<div class="p-2 text-center border-l border-slate-100 dark:border-slate-700 ${today ? 'bg-primary-50 dark:bg-primary-900/20' : ''}">
+          <div class="text-xs text-slate-400">${day.toLocaleDateString('en', {weekday:'short'})}</div>
+          <div class="text-lg font-bold ${today ? 'text-primary-500' : ''}">${day.getDate()}</div>
+        </div>`;
+      }
+      html += '</div>';
+      hours.forEach(h => {
+        html += `<div class="grid grid-cols-8 border-b border-slate-50 dark:border-slate-700/50">`;
+        html += `<div class="p-2 text-xs text-slate-400 text-right pr-3">${String(h).padStart(2,'0')}:00</div>`;
+        for (let d = 0; d < 7; d++) {
+          const day = new Date(startOfWeek);
+          day.setDate(startOfWeek.getDate() + d);
+          day.setHours(h, 0, 0, 0);
+          const dayLessons = lessons.filter(l => { const ld = new Date(l.startAt); return ld.toDateString() === day.toDateString() && ld.getHours() === h; });
+          const today = isToday(day);
+          html += `<div class="cal-slot border-l border-slate-100 dark:border-slate-700 p-1 relative ${today ? 'bg-primary-50/30 dark:bg-primary-900/10' : ''}" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
+          dayLessons.forEach(l => {
+            const st = students.find(s => s.id === l.studentId);
+            const colors = { scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', absent: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', rescheduled: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' };
+            html += `<div class="lesson-pill ${colors[l.status] || colors.scheduled} truncate mb-0.5" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${st ? st.name : t('lesson')}</div>`;
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    },
+    renderDay(lessons, students) {
+      const day = new Date(this.currentDate);
+      const hours = Array.from({length: 14}, (_, i) => i + 8);
+      let html = '<div class="divide-y divide-slate-50 dark:divide-slate-700/50">';
+      hours.forEach(h => {
+        const dayLessons = lessons.filter(l => { const ld = new Date(l.startAt); return ld.toDateString() === day.toDateString() && ld.getHours() === h; });
+        html += `<div class="flex gap-4 p-3 min-h-[60px]">`;
+        html += `<div class="w-16 text-xs text-slate-400 text-right pt-1 flex-shrink-0">${String(h).padStart(2,'0')}:00</div>`;
+        html += `<div class="flex-1 cursor-pointer" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
+        dayLessons.forEach(l => {
+          const st = students.find(s => s.id === l.studentId);
+          html += `<div class="bg-primary-50 dark:bg-primary-900/20 rounded-xl p-3 mb-1 cursor-pointer border border-primary-100 dark:border-primary-800" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">
+            <div class="font-semibold text-sm">${st ? st.name : t('lesson')}</div>
+            <div class="text-xs text-slate-400">${formatTime(l.startAt)} - ${formatTime(l.endAt)} · <span class="badge badge-${l.status}">${l.status}</span></div>
+            ${l.title ? `<div class="text-xs mt-1">${l.title}</div>` : ''}
+          </div>`;
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+      return html;
+    },
+    renderMonth(lessons, students) {
+      const year = this.currentDate.getFullYear();
+      const month = this.currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startPad = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+      let html = '<div class="grid grid-cols-7">';
+      [t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')].forEach(d => { html += `<div class="p-2 text-xs font-semibold text-slate-400 text-center border-b border-slate-100 dark:border-slate-700">${d}</div>`; });
+      for (let i = 0; i < startPad; i++) html += '<div class="p-2 min-h-[80px] border-b border-r border-slate-50 dark:border-slate-700/50"></div>';
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(year, month, d);
+        const today = isToday(date);
+        const dayLessons = lessons.filter(l => new Date(l.startAt).toDateString() === date.toDateString());
+        html += `<div class="p-2 min-h-[80px] border-b border-r border-slate-50 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 ${today ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''}" onclick="CalendarView.currentDate=new Date(${year},${month},${d});CalendarView.viewMode='day';CalendarView.render()">
+          <div class="text-sm font-semibold ${today ? 'text-primary-500' : ''}">${d}</div>
+          ${dayLessons.slice(0,3).map(l => {
+            const st = students.find(s => s.id === l.studentId);
+            return `<div class="lesson-pill bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 truncate mt-0.5" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
+          }).join('')}
+          ${dayLessons.length > 3 ? `<div class="text-xs text-slate-400 mt-0.5">+${dayLessons.length-3} ${t('moreLessons')}</div>` : ''}
+        </div>`;
+      }
+      html += '</div>';
+      return html;
+    },
+    navigate(dir) {
+      if (this.viewMode === 'day') this.currentDate.setDate(this.currentDate.getDate() + dir);
+      else if (this.viewMode === 'week') this.currentDate.setDate(this.currentDate.getDate() + dir * 7);
+      else this.currentDate.setMonth(this.currentDate.getMonth() + dir);
+      this.render();
+    },
+    openForm(id = null, dateStr = null, hour = null) {
+      const lesson = id ? store.getById('lessons', id) : null;
+      const students = store.getAll('students');
+      const packages = store.getAll('packages');
+      const defaultDate = lesson ? new Date(lesson.startAt) : (dateStr ? new Date(dateStr) : new Date());
+      if (hour !== null && !lesson) { defaultDate.setHours(hour, 0, 0, 0); }
+      const endDefault = new Date(defaultDate); endDefault.setHours(endDefault.getHours() + 1);
+      const activePackages = packages.filter(p => p.status === 'active');
+
+      Modal.open(`
+        <h3 class="text-lg font-bold mb-4">${lesson ? t('editLesson') : t('newLesson')}</h3>
+        <form onsubmit="event.preventDefault();CalendarView.save('${id || ''}')" class="space-y-3">
+          <div><label class="text-xs font-semibold text-slate-500">${t('student')}</label>
+            <select name="studentId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+              <option value="">${t('select')}</option>
+              ${students.map(s => `<option value="${s.id}" ${lesson && lesson.studentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('title')}</label><input name="title" value="${lesson ? lesson.title || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm" placeholder="${t('lessonTopic')}"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('date')}</label><input name="date" type="date" required value="${defaultDate.toISOString().split('T')[0]}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('time')}</label><input name="time" type="time" required value="${String(defaultDate.getHours()).padStart(2,'0')}:${String(defaultDate.getMinutes()).padStart(2,'0')}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('duration')}</label><input name="duration" type="number" value="60" min="15" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('status')}</label><select name="status" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+              ${['scheduled','completed','cancelled','rescheduled','absent'].map(s => `<option value="${s}" ${lesson && lesson.status === s ? 'selected' : ''}>${s === 'scheduled' ? t('scheduled') : s === 'completed' ? t('completed') : s === 'cancelled' ? t('cancelledStatus') : s === 'rescheduled' ? t('rescheduled') : t('absent')}</option>`).join('')}
+            </select></div>
+          </div>
+          ${!lesson ? `<div class="flex items-center gap-2"><input type="checkbox" name="recurring" id="recurring-check" class="rounded"><label for="recurring-check" class="text-sm">${t('repeatWeekly')}</label><input name="repeatCount" type="number" value="4" min="1" max="52" class="w-16 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"> ${t('times')}</div>` : ''}
+          ${activePackages.length > 0 ? `<div><label class="text-xs font-semibold text-slate-500">${t('linkToPackage')}</label><select name="packageId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="">${t('none')}</option>${activePackages.map(p => { const st = students.find(s => s.id === p.studentId); return `<option value="${p.id}" ${lesson && lesson.packageId === p.id ? 'selected' : ''}>${st ? st.name : ''} — ${p.totalLessons - p.usedLessons} left</option>`; }).join('')}</select></div>` : ''}
+          <div><label class="text-xs font-semibold text-slate-500">${t('notes')}</label><textarea name="description" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">${lesson ? lesson.description || '' : ''}</textarea></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('homework')}</label><textarea name="homework" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">${lesson ? lesson.homework || '' : ''}</textarea></div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="flex-1 gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${lesson ? t('updateLesson') : t('createLesson')}</button>
+            ${lesson ? `<button type="button" onclick="CalendarView.deleteLesson('${lesson.id}')" class="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-900/20">${t('deleteLesson')}</button>` : ''}
+            <button type="button" onclick="Modal.close()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm">${t('cancel')}</button>
+          </div>
+        </form>
+      `, { size: 'lg' });
+    },
+    save(id) {
+      const form = document.querySelector('.modal-content form');
+      const data = Object.fromEntries(new FormData(form));
+      const [hours, mins] = data.time.split(':').map(Number);
+      const startAt = new Date(data.date); startAt.setHours(hours, mins, 0, 0);
+      const endAt = new Date(startAt); endAt.setMinutes(endAt.getMinutes() + Number(data.duration || 60));
+      const lessonData = { studentId: data.studentId || null, title: data.title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), status: data.status, description: data.description, homework: data.homework, packageId: data.packageId || null, price: 0 };
+      // Get price from student
+      if (data.studentId) { const st = store.getById('students', data.studentId); if (st) lessonData.price = st.pricePerLesson || 0; }
+
+      if (id) {
+        store.update('lessons', id, lessonData);
+        // If status changed to completed and linked to package, deduct
+        const oldLesson = store.getById('lessons', id);
+        if (data.status === 'completed' && lessonData.packageId) {
+          const pkg = store.getById('packages', lessonData.packageId);
+          if (pkg && pkg.usedLessons < pkg.totalLessons) {
+            store.update('packages', pkg.id, { usedLessons: pkg.usedLessons + 1, status: pkg.usedLessons + 1 >= pkg.totalLessons ? 'exhausted' : 'active' });
+          }
+        }
+        Toast.success(t('lessonUpdated'));
+      } else {
+        const count = data.recurring === 'on' ? 1 + Number(data.repeatCount || 0) : 1;
+        const createdLessons = [];
+        for (let i = 0; i < count; i++) {
+          const s = new Date(startAt); s.setDate(s.getDate() + i * 7);
+          const e = new Date(endAt); e.setDate(e.getDate() + i * 7);
+          const l = store.create('lessons', { ...lessonData, startAt: s.toISOString(), endAt: e.toISOString(), isRecurring: i > 0 });
+          createdLessons.push(l);
+        }
+        // If completed + package, deduct
+        createdLessons.forEach(l => {
+          if (data.status === 'completed' && l.packageId) {
+            const pkg = store.getById('packages', l.packageId);
+            if (pkg && pkg.usedLessons < pkg.totalLessons) {
+              store.update('packages', pkg.id, { usedLessons: pkg.usedLessons + 1, status: pkg.usedLessons + 1 >= pkg.totalLessons ? 'exhausted' : 'active' });
+            }
+          }
+        });
+        Toast.success(count > 1 ? `${count} ${t('lessonsCreated')}` : t('lessonCreated'));
+      }
+      Modal.close();
+      this.render();
+    },
+    deleteLesson(id) {
+      if (confirm(t('deleteLessonConfirm'))) {
+        store.delete('lessons', id);
+        Toast.success(t('lessonDeleted'));
+        Modal.close();
+        this.render();
+      }
+    }
+  };
+
+  // ==================== PAYMENTS VIEW ====================
+  const PaymentsView = {
+    filter: 'all',
+    render() {
+      const payments = store.getAll('payments');
+      const students = store.getAll('students');
+      const settings = getSettings();
+      const filtered = this.filter === 'all' ? payments : payments.filter(p => p.status === this.filter);
+      const sorted = filtered.sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
+      const totalPaid = payments.filter(p => p.status === 'paid').reduce((s, p) => s + Number(p.amount), 0);
+      const totalDebt = payments.filter(p => p.status === 'debt').reduce((s, p) => s + Number(p.amount), 0);
+      const monthPaid = payments.filter(p => p.status === 'paid' && isThisMonth(p.paidAt)).reduce((s, p) => s + Number(p.amount), 0);
+
+      const content = `
+        <div class="flex items-center justify-between mb-6">
+          <div><h1 class="text-2xl font-bold">${t('paymentsTitle')}</h1><p class="text-sm text-slate-500 dark:text-slate-400">${payments.length} ${t('records')}</p></div>
+          <div class="flex gap-2">
+            <button onclick="PaymentsView.exportCSV()" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.download} CSV</button>
+            <button onclick="PaymentsView.openForm()" class="gradient-bg text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90">${Icons.plus} ${t('recordPayment')}</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 text-center"><div class="text-xs text-slate-400">${t('totalPaid')}</div><div class="text-xl font-bold text-green-500">${formatCurrency(totalPaid, settings.currency)}</div></div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 text-center"><div class="text-xs text-slate-400">${t('totalDebtTitle')}</div><div class="text-xl font-bold text-red-500">${formatCurrency(totalDebt, settings.currency)}</div></div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 text-center"><div class="text-xs text-slate-400">${t('thisMonth')}</div><div class="text-xl font-bold gradient-text">${formatCurrency(monthPaid, settings.currency)}</div></div>
+        </div>
+        <div class="flex gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+          ${['all','paid','partial','debt','advance'].map(f => `<button onclick="PaymentsView.filter='${f}';PaymentsView.render()" class="px-3 py-1.5 rounded-lg text-xs font-medium transition ${this.filter === f ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-500'}">${f === 'all' ? t('all') : f === 'paid' ? t('paid') : f === 'partial' ? t('partial') : f === 'debt' ? t('debt') : t('advance')}</button>`).join('')}
+        </div>
+        ${sorted.length === 0 ? `<p class="text-sm text-slate-400 text-center py-8">${t('noPaymentsFound')}</p>` : `
+          <div class="space-y-2">${sorted.map(p => {
+            const st = students.find(s => s.id === p.studentId);
+            return `<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <div>
+                <div class="font-semibold text-sm">${st ? st.name : t('unknown')}</div>
+                <div class="text-xs text-slate-400">${p.type} · ${p.method || ''} · ${formatDate(p.paidAt)}</div>
+                ${p.note ? `<div class="text-xs text-slate-400 mt-0.5">${p.note}</div>` : ''}
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-sm">${formatCurrency(p.amount, settings.currency)}</div>
+                <span class="badge ${p.status === 'paid' ? 'badge-completed' : p.status === 'debt' ? 'badge-cancelled' : p.status === 'partial' ? 'badge-absent' : 'badge-rescheduled'}">${p.status}</span>
+              </div>
+              <button onclick="PaymentsView.deletePayment('${p.id}')" class="ml-2 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400">${Icons.trash}</button>
+            </div>`;
+          }).join('')}</div>`}`;
+      AppShell.render(content);
+    },
+    openForm(lessonId = null, studentId = null) {
+      const students = store.getAll('students');
+      Modal.open(`
+        <h3 class="text-lg font-bold mb-4">${t('recordPayment')}</h3>
+        <form onsubmit="event.preventDefault();PaymentsView.save()" class="space-y-3">
+          <div><label class="text-xs font-semibold text-slate-500">${t('student')} *</label><select name="studentId" required class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="">${t('select')}</option>${students.map(s => `<option value="${s.id}" ${studentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('amount')} *</label><input name="amount" type="number" min="0" required class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('status')}</label><select name="status" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="paid">${t('paid')}</option><option value="partial">${t('partial')}</option><option value="debt">${t('debt')}</option><option value="advance">${t('advance')}</option></select></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('type')}</label><select name="type" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="lesson">${t('lesson')}</option><option value="package">${t('package')}</option><option value="debt_repayment">${t('debtRepayment')}</option><option value="advance">${t('advanceType')}</option></select></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('method')}</label><select name="method" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="cash">${t('cash')}</option><option value="card">${t('card')}</option><option value="transfer">${t('transfer')}</option></select></div>
+          </div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('note')}</label><input name="note" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <button type="submit" class="w-full gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${t('savePayment')}</button>
+        </form>
+      `);
+    },
+    save() {
+      const form = document.querySelector('.modal-content form');
+      const data = Object.fromEntries(new FormData(form));
+      store.create('payments', { studentId: data.studentId, amount: Number(data.amount), type: data.type, status: data.status, method: data.method, note: data.note, paidAt: new Date().toISOString() });
+      Toast.success(t('paymentRecorded'));
+      Modal.close();
+      this.render();
+    },
+    deletePayment(id) {
+      if (confirm(t('deletePaymentConfirm'))) { store.delete('payments', id); Toast.success(t('paymentDeleted')); this.render(); }
+    },
+    exportCSV() {
+      const payments = store.getAll('payments');
+      const students = store.getAll('students');
+      const settings = getSettings();
+      const data = payments.map(p => { const st = students.find(s => s.id === p.studentId); return { Student: st ? st.name : 'Unknown', Amount: p.amount, Currency: settings.currency, Type: p.type, Status: p.status, Method: p.method, Date: formatDate(p.paidAt), Note: p.note || '' }; });
+      exportCSV(data, 'payments.csv');
+    }
+  };
+
+  // ==================== MATERIALS VIEW ====================
+  const MaterialsView = {
+    render() {
+      const materials = store.getAll('materials');
+      const content = `
+        <div class="flex items-center justify-between mb-6">
+          <div><h1 class="text-2xl font-bold">${t('materialsTitle')}</h1><p class="text-sm text-slate-500 dark:text-slate-400">${materials.length} ${t('items')}</p></div>
+          <button onclick="MaterialsView.openForm()" class="gradient-bg text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90">${Icons.plus} ${t('addMaterial')}</button>
+        </div>
+        ${materials.length === 0 ? `<div class="text-center py-16"><div class="w-16 h-16 mx-auto mb-4 gradient-bg rounded-2xl flex items-center justify-center text-white opacity-50">${Icons.book}</div><h3 class="text-lg font-semibold mb-2">${t('noMaterialsYet')}</h3><p class="text-sm text-slate-400">${t('addMaterialsHint')}</p></div>` : `
+          <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">${materials.map(m => `
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white text-xs">${m.type === 'link' ? Icons.link : m.type === 'file' ? Icons.file : Icons.book}</span>
+                  <span class="text-xs font-semibold uppercase text-slate-400">${m.type}</span>
+                </div>
+                <button onclick="MaterialsView.deleteMaterial('${m.id}')" class="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400">${Icons.trash}</button>
+              </div>
+              <h3 class="font-semibold text-sm mb-1">${m.title}</h3>
+              ${m.content ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">${m.content}</p>` : ''}
+              ${m.url ? `<a href="${m.url}" target="_blank" class="text-xs text-primary-500 hover:underline break-all">${m.url}</a>` : ''}
+              ${m.tags && m.tags.length ? `<div class="flex gap-1 mt-2 flex-wrap">${m.tags.map(t => `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs text-slate-500">${t}</span>`).join('')}</div>` : ''}
+              <div class="text-xs text-slate-400 mt-2">${formatDate(m.createdAt)}</div>
+            </div>
+          `).join('')}</div>`}`;
+      AppShell.render(content);
+    },
+    openForm() {
+      Modal.open(`
+        <h3 class="text-lg font-bold mb-4">${t('addMaterial')}</h3>
+        <form onsubmit="event.preventDefault();MaterialsView.save()" class="space-y-3">
+          <div><label class="text-xs font-semibold text-slate-500">${t('materialTitle')} *</label><input name="title" required class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('materialType')}</label><select name="type" id="mat-type" onchange="MaterialsView.toggleFields()" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="note">${t('materialNote')}</option><option value="link">${t('materialLink')}</option><option value="file">${t('materialFile')}</option></select></div>
+          <div id="url-field" class="hidden"><label class="text-xs font-semibold text-slate-500">${t('url')}</label><input name="url" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          <div id="content-field"><label class="text-xs font-semibold text-slate-500">${t('content')}</label><textarea name="content" rows="4" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></textarea></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('tagsLabel')}</label><input name="tags" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm" placeholder="grammar, homework"></div>
+          <button type="submit" class="w-full gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${t('saveMaterial')}</button>
+        </form>
+      `);
+    },
+    toggleFields() {
+      const type = document.getElementById('mat-type').value;
+      document.getElementById('url-field').classList.toggle('hidden', type !== 'link');
+      document.getElementById('content-field').classList.toggle('hidden', type === 'file');
+    },
+    save() {
+      const form = document.querySelector('.modal-content form');
+      const data = Object.fromEntries(new FormData(form));
+      const tags = data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+      store.create('materials', { title: data.title, type: data.type, url: data.url || null, content: data.content || null, tags });
+      Toast.success(t('materialAdded'));
+      Modal.close();
+      this.render();
+    },
+    deleteMaterial(id) {
+      if (confirm(t('deleteMaterialConfirm'))) { store.delete('materials', id); Toast.success(t('materialDeleted')); this.render(); }
+    }
+  };
+
+  // ==================== SETTINGS VIEW ====================
+  const SettingsView = {
+    render() {
+      const s = getSettings();
+      const content = `
+        <h1 class="text-2xl font-bold mb-6">${t('settingsTitle')}</h1>
+        <div class="max-w-lg space-y-6">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+            <h3 class="font-semibold mb-4">${t('profile')}</h3>
+            <form onsubmit="event.preventDefault();SettingsView.saveProfile()" class="space-y-3">
+              <div><label class="text-xs font-semibold text-slate-500">${t('yourName')}</label><input name="name" value="${s.name || ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+              <div><label class="text-xs font-semibold text-slate-500">${t('currency')}</label><select name="currency" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="UAH" ${s.currency === 'UAH' ? 'selected' : ''}>UAH (₴)</option><option value="USD" ${s.currency === 'USD' ? 'selected' : ''}>USD ($)</option><option value="EUR" ${s.currency === 'EUR' ? 'selected' : ''}>EUR (€)</option><option value="GBP" ${s.currency === 'GBP' ? 'selected' : ''}>GBP (£)</option></select></div>
+              <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-xl text-sm font-semibold hover:opacity-90">${t('save')}</button>
+            </form>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+            <h3 class="font-semibold mb-4">${t('appearance')}</h3>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">${t('darkMode')}</span>
+              <button onclick="toggleTheme()" class="w-12 h-7 rounded-full transition-colors ${s.theme === 'dark' ? 'gradient-bg' : 'bg-slate-200'} relative">
+                <span class="absolute top-0.5 ${s.theme === 'dark' ? 'left-6' : 'left-0.5'} w-6 h-6 bg-white rounded-full shadow transition-all"></span>
+              </button>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+            <h3 class="font-semibold mb-4">${t('language')}</h3>
+            <div class="flex items-center justify-between">
+              <span class="text-sm">${t('language')}</span>
+              <select onchange="setLang(this.value)" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+                <option value="en" ${getLang()==='en'?'selected':''}>${t('english')}</option>
+                <option value="uk" ${getLang()==='uk'?'selected':''}>${t('ukrainian')}</option>
+              </select>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+            <h3 class="font-semibold mb-4">${t('dataManagement')}</h3>
+            <div class="flex gap-3">
+              <button onclick="SettingsView.exportData()" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.download} ${t('exportBackup')}</button>
+              <label class="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">${Icons.upload} ${t('importBackup')}<input type="file" accept=".json" class="hidden" onchange="SettingsView.importData(event)"></label>
+            </div>
+            <button onclick="SettingsView.clearData()" class="mt-3 px-4 py-2 rounded-xl border border-red-200 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-900/20">${t('clearAllData')}</button>
+          </div>
+        </div>`;
+      AppShell.render(content);
+    },
+    saveProfile() {
+      const form = document.querySelector('.modal-content form') || document.querySelector('#page-content form');
+      const data = Object.fromEntries(new FormData(form));
+      const current = getSettings();
+      store.saveSettings({ ...current, name: data.name, currency: data.currency });
+      Toast.success(t('settingsSaved'));
+      this.render();
+    },
+    exportData() {
+      const data = store.exportAll();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `tutorpro-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      Toast.success(t('backupExported'));
+    },
+    importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          store.importAll(data).then(() => {
+            Toast.success(t('dataImported'));
+            Router.navigate('dashboard');
+          });
+        } catch (err) { Toast.error(t('invalidBackup')); }
+      };
+      reader.readAsText(file);
+    },
+    clearData() {
+      if (confirm(t('clearConfirm1'))) {
+        if (confirm(t('clearConfirm2'))) {
+          const batch = db.batch();
+          const promises = COLLECTIONS.map(col =>
+            db.collection(col).get().then(snap => {
+              snap.docs.forEach(doc => batch.delete(doc.ref));
+            })
+          );
+          Promise.all(promises).then(() => {
+            batch.commit();
+            db.doc('settings/app').set({});
+          }).then(() => {
+            COLLECTIONS.forEach(c => store._cache[c] = []);
+            store._cache.settings = {};
+            Toast.success(t('allDataCleared'));
+            Router.navigate('dashboard');
+          });
+        }
+      }
+    }
+  };
+
+  // ==================== ROUTER SETUP ====================
+  Router.register('dashboard', () => DashboardView.render());
+  Router.register('students', () => StudentsView.render());
+  Router.register('student', (params) => StudentProfileView.render(params.id));
+  Router.register('calendar', () => CalendarView.render());
+  Router.register('payments', () => PaymentsView.render());
+  Router.register('materials', () => MaterialsView.render());
+  Router.register('settings', () => SettingsView.render());
+
+  // ==================== KEYBOARD SHORTCUTS ====================
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'k' || e.key === 'K') { e.preventDefault(); document.getElementById('global-search')?.focus(); }
+      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); if (Router.current === 'calendar') CalendarView.openForm(); else if (Router.current === 'students') StudentsView.openForm(); }
+    }
+    if (e.key === 'Escape') Modal.close();
+  });
+
+  // Close search results on click outside
+  document.addEventListener('click', (e) => {
+    const sr = document.getElementById('search-results');
+    if (sr && !e.target.closest('#global-search') && !e.target.closest('#search-results')) sr.classList.add('hidden');
+  });
+
+  // ==================== START APP (auth-gated) ====================
+  document.documentElement.lang = getLang();
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      // User is signed in — load data + start app
+      store.init(user.uid).then(() => {
+        Router.start();
+        if (store.getSettings().lang) document.documentElement.lang = store.getSettings().lang;
+      }).catch(err => {
+        console.error('Firestore init failed:', err);
+        Router.start();
+      });
+    } else {
+      // No user — show login screen (Router.start will be called after sign-in)
+      LoginView.render();
+    }
+  });
+  </script>
+</body>
+</html>
