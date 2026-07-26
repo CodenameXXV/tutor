@@ -28,12 +28,20 @@
     }
   </script>
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; margin: 0; background: #f8fafc; }
-    .dark body, .dark { background: #0f172a; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #faf5ef 0%, #f0ecf7 30%, #e0ecfa 70%, #faf5ef 100%); background-size: 400% 400%; animation: ambientShift 20s ease infinite; min-height: 100vh; }
+    .dark body, .dark { background: linear-gradient(135deg, #0b0b1a 0%, #14142b 30%, #1a1a2e 60%, #0f0f20 100%); animation: ambientShiftDark 20s ease infinite; }
+    body { color: #2d2b3a; }
+    .dark { color: #d1d5e6; }
 
-    /* ====== Animations ====== */
-    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    /* ====== Ambient Background Animation ====== */
+    @keyframes ambientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes ambientShiftDark { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes floatIn { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes gentleFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes slideUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 8px 32px rgba(120,80,200,0.15); } 50% { box-shadow: 0 8px 48px rgba(120,80,200,0.25); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
@@ -42,35 +50,39 @@
     @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
     @keyframes toastSlideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(40px); } }
-    .animate-fade-slide-up { animation: fadeSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-    .animate-fade-in { animation: fadeIn 0.3s ease both; }
-    .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16,1,0.3,1) both; }
-    .animate-slide-right { animation: slideInRight 0.35s cubic-bezier(0.16,1,0.3,1) both; }
-    .page-enter { animation: fadeSlideUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes toastSlideIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    @keyframes toastFadeOut { 0% { opacity: 1; } 100% { opacity: 0; transform: translateX(40px); } }
+    @keyframes pageEnter { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
+    .page-enter { animation: pageEnter 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+    .animate-scale-in { animation: floatIn 0.3s ease both; }
+    body { transition: background 0.4s ease, color 0.4s ease; }
 
     /* ====== Glassmorphism ====== */
-    .glass { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); }
-    .glass-dark { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); background: rgba(15,23,42,0.75); border: 1px solid rgba(255,255,255,0.06); }
-    .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-    .glass-card:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(0,123,255,0.1); }
-    .dark .glass-card { background: rgba(30,41,59,0.5); border-color: rgba(255,255,255,0.06); }
-    .dark .glass-card:hover { box-shadow: 0 20px 50px rgba(0,212,255,0.08); }
+    /* ====== Floating Calendar Card ====== */
+    .cal-floating { background: rgba(255,255,255,0.55); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border: 1px solid rgba(255,255,255,0.5); border-radius: 32px; box-shadow: 0 8px 32px rgba(120,80,200,0.1), 0 2px 8px rgba(0,0,0,0.03); animation: floatIn 0.6s cubic-bezier(0.16,1,0.3,1) both, pulseGlow 4s ease-in-out infinite; overflow: hidden; }
+    .dark .cal-floating { background: rgba(20,20,43,0.6); border-color: rgba(255,255,255,0.06); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    /* ====== Glass Cards ====== */
+    .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+    .glass-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(108,92,231,0.06); }
+    .dark .glass-card { background: rgba(20,20,43,0.4); border-color: rgba(255,255,255,0.04); }
+
+    /* ====== Floating Pills Navigation ====== */
+    .nav-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 500; color: rgba(45,43,58,0.5); transition: all 0.3s cubic-bezier(0.16,1,0.3,1); white-space: nowrap; background: transparent; border: none; cursor: pointer; }
+    .nav-pill:hover { color: rgba(45,43,58,0.8); background: rgba(255,255,255,0.3); }
+    .dark .nav-pill { color: rgba(209,213,230,0.4); }
+    .dark .nav-pill:hover { color: rgba(209,213,230,0.8); background: rgba(255,255,255,0.05); }
+    .nav-pill.active { color: #6c5ce7; background: rgba(108,92,231,0.12); }
+    .dark .nav-pill.active { color: #a78bfa; background: rgba(167,139,250,0.12); }
 
     /* ====== Gradient ====== */
     .gradient-text { background: linear-gradient(135deg, #007BFF, #00D4FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .gradient-bg { background: linear-gradient(135deg, #007BFF, #00D4FF); }
-    .gradient-bg-hover:hover { background: linear-gradient(135deg, #0062cc, #00a9cc); }
+    .gradient-bg { background: linear-gradient(135deg, #6c5ce7, #a78bfa); }
+    .gradient-warm { background: linear-gradient(135deg, #f97316, #f59e0b); }
+    .gradient-cool { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+    .gradient-rose { background: linear-gradient(135deg, #ec4899, #f43f5e); }
 
-    /* ====== Top Navigation ====== */
-    .top-nav { height: 64px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); background: rgba(255,255,255,0.85); border-bottom: 1px solid rgba(226,232,240,0.5); position: sticky; top: 0; z-index: 50; }
-    .dark .top-nav { background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(51,65,85,0.3); }
-    .top-nav-link { position: relative; padding: 6px 14px; border-radius: 12px; font-size: 13px; font-weight: 500; color: #64748b; transition: all 0.2s; white-space: nowrap; }
-    .top-nav-link:hover { color: #1e293b; background: rgba(0,123,255,0.06); }
-    .dark .top-nav-link { color: #94a3b8; }
-    .dark .top-nav-link:hover { color: #e2e8f0; background: rgba(0,212,255,0.06); }
-    .top-nav-link.active { color: #007BFF; background: rgba(0,123,255,0.1); }
-    .dark .top-nav-link.active { color: #00D4FF; background: rgba(0,212,255,0.1); }
-    .top-nav-link.active::after { content: ''; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; border-radius: 2px; background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    /* ====== Compact Top Bar ====== */
+    .top-bar { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
 
     /* ====== Scrollbar ====== */
     ::-webkit-scrollbar { width: 5px; }
@@ -81,77 +93,78 @@
     /* ====== Modal ====== */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content { transform: scale(0.92) translateY(12px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); max-height: 90vh; overflow-y: auto; }
+    .modal-content { transform: scale(0.92) translateY(20px); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); max-height: 90vh; overflow-y: auto; background: rgba(255,255,255,0.7); backdrop-filter: blur(32px); border: 1px solid rgba(255,255,255,0.5); border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+    .dark .modal-content { background: rgba(20,20,43,0.7); border-color: rgba(255,255,255,0.06); }
     .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
 
     /* ====== Toast ====== */
     .toast-container { position: fixed; top: 80px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
-    .toast { padding: 14px 22px; border-radius: 14px; color: white; font-size: 14px; font-weight: 500; animation: toastSlideIn 0.35s cubic-bezier(0.16,1,0.3,1), toastFadeOut 0.35s ease 2.65s both; box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
-    .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
-    .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
-    .toast-info { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    .toast { padding: 14px 22px; border-radius: 16px; color: white; font-size: 14px; font-weight: 500; animation: toastSlideIn 0.4s cubic-bezier(0.16,1,0.3,1), toastFadeOut 0.3s ease 2.7s both; box-shadow: 0 8px 32px rgba(0,0,0,0.1); backdrop-filter: blur(12px); }
+    .toast-success { background: rgba(16,185,129,0.85); }
+    .toast-error { background: rgba(239,68,68,0.85); }
+    .toast-info { background: rgba(108,92,231,0.85); }
 
     /* ====== Calendar ====== */
-    .cal-slot { min-height: 44px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s; }
-    .cal-slot:hover { background: rgba(0,123,255,0.04); }
-    .dark .cal-slot { border-bottom-color: rgba(51,65,85,0.4); }
-    .dark .cal-slot:hover { background: rgba(0,212,255,0.04); }
-    .cal-time { font-size: 11px; font-weight: 600; color: #94a3b8; letter-spacing: 0.3px; }
-
-    /* Lesson pill */
-    .lesson-pill { padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-    .lesson-pill:hover { transform: scale(1.03); filter: brightness(1.1); }
+    .cal-slot { min-height: 48px; border-bottom: 1px solid rgba(0,0,0,0.04); cursor: pointer; transition: background 0.15s; }
+    .cal-slot:hover { background: rgba(108,92,231,0.03); }
+    .dark .cal-slot { border-bottom-color: rgba(255,255,255,0.04); }
+    .dark .cal-slot:hover { background: rgba(167,139,250,0.03); }
+    .cal-time { font-size: 11px; font-weight: 600; color: rgba(45,43,58,0.3); letter-spacing: 0.5px; }
+    .dark .cal-time { color: rgba(209,213,230,0.3); }
+    .lesson-pill { padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); border: 1px solid transparent; }
+    .lesson-pill:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
     /* ====== Context Menu ====== */
-    .ctx-menu { position: fixed; z-index: 300; min-width: 200px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 16px; box-shadow: 0 10px 50px rgba(0,0,0,0.15); border: 1px solid rgba(226,232,240,0.8); padding: 6px; opacity: 0; transform: scale(0.93) translateY(-4px); transition: opacity 0.15s, transform 0.2s cubic-bezier(0.16,1,0.3,1); pointer-events: none; }
+    .ctx-menu { position: fixed; z-index: 300; min-width: 200px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.4); padding: 6px; opacity: 0; transform: scale(0.92) translateY(-8px); transition: all 0.2s cubic-bezier(0.16,1,0.3,1); pointer-events: none; }
     .ctx-menu.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
-    .ctx-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 13px; border-radius: 10px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.1s; }
-    .ctx-menu-item:hover { background: #f1f5f9; }
-    .ctx-menu-item.text-red-500:hover { background: #fef2f2; }
-    .ctx-menu-divider { height: 1px; background: #e2e8f0; margin: 4px 8px; }
-    .dark .ctx-menu { background: rgba(30,41,59,0.95); border-color: rgba(51,65,85,0.5); box-shadow: 0 10px 50px rgba(0,0,0,0.5); }
-    .dark .ctx-menu-item:hover { background: rgba(51,65,85,0.6); }
-    .dark .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.15); }
-    .dark .ctx-menu-divider { background: #334155; }
+    .ctx-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 14px; border-radius: 12px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; text-align: left; transition: all 0.1s; }
+    .ctx-menu-item:hover { background: rgba(108,92,231,0.06); }
+    .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.06); }
+    .ctx-menu-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 4px 8px; }
+    .dark .ctx-menu { background: rgba(20,20,43,0.9); border-color: rgba(255,255,255,0.06); box-shadow: 0 10px 50px rgba(0,0,0,0.4); }
+    .dark .ctx-menu-item:hover { background: rgba(167,139,250,0.06); }
+    .dark .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.1); }
+    .dark .ctx-menu-divider { background: rgba(255,255,255,0.06); }
 
     /* ====== Status badges ====== */
-    .badge { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.2px; }
-    .badge-scheduled { background: #dbeafe; color: #1d4ed8; }
-    .badge-completed { background: #d1fae5; color: #059669; }
-    .badge-cancelled { background: #fee2e2; color: #dc2626; }
-    .badge-absent { background: #fef3c7; color: #d97706; }
-    .badge-rescheduled { background: #e0e7ff; color: #4338ca; }
-    .dark .badge-scheduled { background: rgba(30,58,95,0.6); color: #93c5fd; }
-    .dark .badge-completed { background: rgba(6,78,59,0.5); color: #6ee7b7; }
-    .dark .badge-cancelled { background: rgba(127,29,29,0.5); color: #fca5a5; }
-    .dark .badge-absent { background: rgba(120,53,15,0.5); color: #fcd34d; }
-    .dark .badge-rescheduled { background: rgba(49,46,129,0.5); color: #a5b4fc; }
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 100px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+    .badge-scheduled { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    .badge-completed { background: rgba(16,185,129,0.1); color: #10b981; }
+    .badge-cancelled { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .badge-absent { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .badge-rescheduled { background: rgba(99,102,241,0.1); color: #6366f1; }
+    .dark .badge-scheduled { background: rgba(59,130,246,0.15); color: #93c5fd; }
+    .dark .badge-completed { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .dark .badge-cancelled { background: rgba(239,68,68,0.15); color: #fca5a5; }
+    .dark .badge-absent { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .dark .badge-rescheduled { background: rgba(99,102,241,0.15); color: #a5b4fc; }
 
     /* ====== FAB ====== */
-    .fab { position: fixed; bottom: 28px; right: 28px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 40; box-shadow: 0 6px 24px rgba(0,123,255,0.35); transition: all 0.25s cubic-bezier(0.16,1,0.3,1); cursor: pointer; }
-    .fab:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 8px 30px rgba(0,123,255,0.45); }
+    .fab { position: fixed; bottom: 28px; right: 28px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 40; cursor: pointer; color: white; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 8px 28px rgba(108,92,231,0.3); }
+    .fab:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 12px 40px rgba(108,92,231,0.4); }
     .fab:active { transform: scale(0.95); }
 
     /* ====== Day cell in month view ====== */
-    .day-cell { min-height: 80px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; cursor: pointer; transition: all 0.15s; }
-    .day-cell:hover { background: rgba(0,123,255,0.03); }
-    .dark .day-cell { border-color: rgba(51,65,85,0.3); }
-    .dark .day-cell:hover { background: rgba(0,212,255,0.03); }
-    .day-cell.today { background: rgba(0,123,255,0.04); }
-    .dark .day-cell.today { background: rgba(0,212,255,0.04); }
+    .day-cell { min-height: 90px; border-bottom: 1px solid rgba(0,0,0,0.04); border-right: 1px solid rgba(0,0,0,0.04); cursor: pointer; transition: all 0.15s; padding: 4px; }
+    .day-cell:hover { background: rgba(108,92,231,0.02); }
+    .dark .day-cell { border-color: rgba(255,255,255,0.04); }
+    .dark .day-cell:hover { background: rgba(167,139,250,0.02); }
+    .day-cell.today { background: rgba(108,92,231,0.04); }
+    .dark .day-cell.today { background: rgba(167,139,250,0.04); }
+    .cal-month-grid > div:nth-child(7n) { border-right: none; }
 
     /* ====== Student card ====== */
-    .student-card { transition: all 0.25s cubic-bezier(0.16,1,0.3,1); }
-    .student-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.06); }
-    .dark .student-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
+    .student-card { transition: all 0.25s cubic-bezier(0.16,1,0.3,1); background: rgba(255,255,255,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; }
+    .dark .student-card { background: rgba(20,20,43,0.4); border-color: rgba(255,255,255,0.06); }
+    .student-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.04); }
 
     /* ====== Mobile nav drawer ====== */
     .mobile-nav { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
     .mobile-nav.open { pointer-events: auto; }
     .mobile-nav-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; }
     .mobile-nav.open .mobile-nav-backdrop { opacity: 1; }
-    .mobile-nav-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: white; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); padding: 20px; }
-    .dark .mobile-nav-panel { background: #0f172a; }
+    .mobile-nav-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); padding: 24px; }
+    .dark .mobile-nav-panel { background: rgba(11,11,26,0.9); }
     .mobile-nav.open .mobile-nav-panel { transform: translateX(0); }
 
     /* ====== Utility ====== */
@@ -163,7 +176,7 @@
     .cal-month-grid > div:nth-child(7n) { border-right: none; }
   </style>
 </head>
-<body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+<body>
   <div id="app"></div>
   <div id="modal-root"></div>
   <div class="toast-container" id="toast-container"></div>
@@ -1068,7 +1081,7 @@
               <!-- Desktop Nav -->
               <div class="hidden md:flex items-center gap-0.5">
                 ${navItems.map(l =>
-                  `<a href="#${l.hash}" class="top-nav-link flex items-center gap-1.5 ${Router.current === l.hash ? 'active' : ''}">${l.icon}<span>${l.label}</span></a>`
+                  `<a href="#${l.hash}" class="nav-pill ${Router.current === l.hash ? 'active' : ''}">${l.icon}<span>${l.label}</span></a>`
                 ).join('')}
               </div>
               <!-- Mobile hamburger -->
@@ -1736,10 +1749,10 @@
             </div>
           </div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm animate-scale-in">
+        <div class="cal-floating">
           ${this.viewMode === 'day' ? this.renderDay(lessons, students) : this.viewMode === 'week' ? this.renderWeek(lessons, students) : this.renderMonth(lessons, students)}
         </div>
-        <button onclick="CalendarView.openForm()" class="fab gradient-bg text-white">${Icons.plus}</button>`;
+        <button onclick="CalendarView.openForm()" class="fab gradient-bg">${Icons.plus}</button>`;
       AppShell.render(content);
     },
     renderWeek(lessons, students) {
