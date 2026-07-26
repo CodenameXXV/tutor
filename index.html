@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" type="image/png">
-  <title>TutorBoard — Studio</title>
+  <title>TutorPro — Tutor Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
@@ -20,350 +20,105 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            primary: { 50:'#f5f2ed',100:'#ede9e2',200:'#d9d4cc',300:'#b5afaa',400:'#8a8480',500:'#1a1a1a',600:'#c96555',700:'#4a8a6a',800:'#c95555',900:'#5577aa' },
-            accent: { 400:'#c96555',500:'#b85545',600:'#a04535' }
+            primary: { 50:'#e6f2ff',100:'#b3d9ff',200:'#80bfff',300:'#4da6ff',400:'#1a8cff',500:'#007BFF',600:'#0062cc',700:'#004999',800:'#003166',900:'#001833' },
+            accent: { 400:'#33ddff',500:'#00D4FF',600:'#00a9cc' }
           }
         }
       }
     }
   </script>
   <style>
-    :root {
-      --bg: #f5f2ed;
-      --bg-alt: #ede9e2;
-      --text: #1a1a1a;
-      --text-secondary: #8a8480;
-      --text-muted: #b5afaa;
-      --border: #d9d4cc;
-      --accent: #c96555;
-      --accent-hover: #b85545;
-      --accent-light: rgba(201,101,85,0.08);
-      --accent-bg: rgba(201,101,85,0.06);
-      --green: #4a8a6a;
-      --red: #c95555;
-      --blue: #5577aa;
-      --yellow: #c9a045;
-      --radius: 0px;
-      --font: 'Inter', -apple-system, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; margin: 0; }
 
-    /* ====== Layout ====== */
-    .app-shell { display: flex; height: 100vh; overflow: hidden; }
-    .cal-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); min-width: 0; }
-    .info-panel { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--bg-alt); overflow-y: auto; }
-    @media (max-width: 1024px) { .info-panel { width: 340px; } }
-    @media (max-width: 768px) { .app-shell { flex-direction: column; } .info-panel { width: 100%; max-height: 50vh; } .cal-panel { border-right: none; border-bottom: 1px solid var(--border); } }
+    /* Glassmorphism */
+    .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); }
+    .glass-dark { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); background: rgba(30,41,59,0.6); border: 1px solid rgba(255,255,255,0.08); }
+    .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; transition: transform 0.3s, box-shadow 0.3s; }
+    .glass-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,123,255,0.12); }
+    .dark .glass-card { background: rgba(30,41,59,0.5); border-color: rgba(255,255,255,0.08); }
+    .dark .glass-card:hover { box-shadow: 0 20px 40px rgba(0,212,255,0.1); }
 
-    /* ====== Top Bar ====== */
-    .top-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 24px; height: 52px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .top-bar-left { display: flex; align-items: center; gap: 16px; }
-    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    /* Gradient */
+    .gradient-text { background: linear-gradient(135deg, #007BFF, #00D4FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gradient-bg { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    .gradient-bg-hover:hover { background: linear-gradient(135deg, #0062cc, #00a9cc); }
 
-    /* ====== Nav ====== */
-    .nav-list { display: flex; gap: 2px; }
-    .nav-item {
-      padding: 6px 14px; font-size: 13px; font-weight: 450;
-      color: var(--text-secondary); cursor: pointer;
-      transition: all 0.15s; border: none; background: none;
-      letter-spacing: 0.01em;
-      border-bottom: 2px solid transparent;
-    }
-    .nav-item:hover { color: var(--text); }
-    .nav-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+    /* Sidebar */
+    .sidebar { width: 260px; transition: transform 0.3s ease, width 0.3s ease; }
+    .sidebar.collapsed { transform: translateX(-260px); }
+    @media (max-width: 768px) { .sidebar { position: fixed; z-index: 50; height: 100vh; transform: translateX(-260px); } .sidebar.open { transform: translateX(0); } }
 
-    /* ====== Calendar Header ====== */
-    .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px 12px; flex-shrink: 0; }
-    .cal-title { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
-    .cal-nav { display: flex; align-items: center; gap: 4px; }
-    .cal-nav-btn {
-      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-      border: 1px solid var(--border); background: var(--bg); cursor: pointer;
-      transition: all 0.15s; color: var(--text); font-size: 14px;
-    }
-    .cal-nav-btn:hover { background: var(--bg-alt); }
-    .cal-nav-btn:active { background: var(--border); }
-    .cal-today-btn {
-      padding: 4px 12px; font-size: 12px; font-weight: 500;
-      border: 1px solid var(--border); background: var(--bg); cursor: pointer;
-      transition: all 0.15s; color: var(--text-secondary);
-    }
-    .cal-today-btn:hover { color: var(--text); background: var(--bg-alt); }
-
-    /* ====== View Toggle ====== */
-    .view-toggle { display: flex; border: 1px solid var(--border); }
-    .view-toggle button {
-      padding: 5px 14px; font-size: 11px; font-weight: 500;
-      border: none; background: var(--bg); cursor: pointer;
-      color: var(--text-secondary); transition: all 0.15s;
-      letter-spacing: 0.05em; text-transform: uppercase;
-    }
-    .view-toggle button:not(:last-child) { border-right: 1px solid var(--border); }
-    .view-toggle button:hover { color: var(--text); }
-    .view-toggle button.active { background: var(--text); color: var(--bg); }
-
-    /* ====== Calendar Grid ====== */
-    .cal-week-grid { display: grid; border-top: 1px solid var(--border); flex: 1; overflow-y: auto; position: relative; }
-    .cal-week-header { font-size: 11px; font-weight: 500; color: var(--text-muted); padding: 8px 4px; text-align: center; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; }
-    .cal-week-header:first-child { border-right: 1px solid var(--border); }
-    .cal-week-header.today-col { color: var(--accent); }
-    .cal-time-slot { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 2px 6px; font-size: 10px; color: var(--text-muted); position: relative; }
-    .cal-time-slot:hover { background: rgba(0,0,0,0.02); }
-    .cal-time-label { position: absolute; right: 6px; font-size: 10px; color: var(--text-muted); transform: translateY(-50%); font-variant-numeric: tabular-nums; }
-    .cal-day-slot { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.1s; }
-    .cal-day-slot:hover { background: var(--accent-bg); }
-    .cal-day-slot.today-slot { background: rgba(201,101,85,0.03); }
-
-    /* ====== Lesson Pills ====== */
-    .lesson-dot {
-      position: absolute; left: 2px; right: 2px; top: 2px;
-      padding: 2px 6px; font-size: 10px; font-weight: 500;
-      cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      transition: all 0.15s; z-index: 2;
-      border-left: 3px solid var(--accent);
-      background: var(--accent-light);
-      color: var(--accent);
-    }
-    .lesson-dot:hover { background: rgba(201,101,85,0.15); }
-    .lesson-dot.completed { border-left-color: var(--green); background: rgba(74,138,106,0.08); color: var(--green); }
-    .lesson-dot.cancelled { border-left-color: var(--red); background: rgba(201,85,85,0.08); color: var(--red); text-decoration: line-through; }
-    .lesson-dot.absent { border-left-color: var(--yellow); background: rgba(201,160,69,0.08); color: var(--yellow); }
-
-    /* ====== Month Grid ====== */
-    .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--border); flex: 1; overflow-y: auto; }
-    .month-cell { min-height: 90px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 4px 6px; cursor: pointer; transition: background 0.1s; position: relative; }
-    .month-cell:hover { background: var(--accent-bg); }
-    .month-cell:nth-child(7n) { border-right: none; }
-    .month-cell.other-month { opacity: 0.3; }
-    .month-cell.today-cell { background: var(--accent-bg); }
-    .month-date { font-size: 13px; font-weight: 450; color: var(--text); margin-bottom: 2px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; }
-    .month-date.today { background: var(--accent); color: white; font-weight: 600; }
-
-    /* ====== Info Panel ====== */
-    .info-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .info-date { font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; }
-    .info-day { font-size: 12px; color: var(--text-secondary); font-weight: 450; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-    .info-content { padding: 12px 20px; flex: 1; overflow-y: auto; }
-    .info-section { margin-bottom: 20px; }
-    .info-section-title { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .info-lesson { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.1s; margin: 0 -8px; padding: 8px; }
-    .info-lesson:hover { background: var(--accent-bg); }
-    .info-lesson-time { font-size: 12px; font-weight: 500; color: var(--text-secondary); min-width: 44px; }
-    .info-lesson-name { font-size: 13px; font-weight: 450; flex: 1; }
-    .info-lesson-status { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-    .info-stat { display: flex; align-items: baseline; gap: 6px; padding: 6px 0; }
-    .info-stat-value { font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
-    .info-stat-label { font-size: 11px; color: var(--text-secondary); }
-    .info-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-
-    /* ====== Modal ====== */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(26,26,26,0.3); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content { transform: translateY(8px); transition: transform 0.25s ease; max-height: 85vh; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); min-width: 400px; max-width: 560px; }
-    .modal-overlay.active .modal-content { transform: translateY(0); }
-    .modal-body { padding: 24px; }
-    .modal-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; letter-spacing: -0.01em; }
-
-    /* ====== Toast ====== */
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 6px; }
-    .toast {
-      padding: 10px 16px; color: var(--bg); font-size: 13px; font-weight: 450;
-      animation: toastIn 0.25s ease, toastOut 0.2s ease 2.8s forwards;
-      border: 1px solid var(--text); background: var(--text);
-    }
-    @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(4px); } }
-    .toast-success { background: var(--green); border-color: var(--green); color: white; }
-    .toast-error { background: var(--red); border-color: var(--red); color: white; }
-    .toast-info { background: var(--accent); border-color: var(--accent); color: white; }
-
-    /* ====== Context Menu ====== */
-    .ctx-menu { position: fixed; z-index: 300; min-width: 160px; background: var(--bg); border: 1px solid var(--border); padding: 4px; opacity: 0; transform: scale(0.97) translateY(-4px); transition: all 0.15s ease; pointer-events: none; }
-    .ctx-menu.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
-    .ctx-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 10px; font-size: 12px; font-weight: 450; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.1s; }
-    .ctx-menu-item:hover { background: var(--accent-bg); }
-    .ctx-menu-divider { height: 1px; background: var(--border); margin: 4px 6px; }
-
-    /* ====== Status badges ====== */
-    .badge { display: inline-flex; align-items: center; padding: 1px 8px; font-size: 10px; font-weight: 500; letter-spacing: 0.03em; border: 1px solid; }
-    .badge-scheduled { border-color: var(--blue); color: var(--blue); }
-    .badge-completed { border-color: var(--green); color: var(--green); }
-    .badge-cancelled { border-color: var(--red); color: var(--red); }
-    .badge-absent { border-color: var(--yellow); color: var(--yellow); }
-    .badge-rescheduled { border-color: var(--accent); color: var(--accent); }
-
-    /* ====== Form Elements ====== */
-    input, select, textarea {
-      font-family: var(--font); font-size: 13px; padding: 8px 12px;
-      border: 1px solid var(--border); background: var(--bg); color: var(--text);
-      outline: none; transition: border-color 0.15s; width: 100%;
-    }
-    input:focus, select:focus, textarea:focus { border-color: var(--text); }
-    input::placeholder, textarea::placeholder { color: var(--text-muted); }
-    label { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 4px; }
-    .field { margin-bottom: 14px; }
-    .btn {
-      padding: 8px 20px; font-size: 13px; font-weight: 450; cursor: pointer;
-      border: 1px solid var(--border); background: var(--bg); color: var(--text);
-      transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
-    }
-    .btn:hover { border-color: var(--text); }
-    .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
-    .btn-primary:hover { opacity: 0.85; }
-    .btn-sm { padding: 4px 12px; font-size: 11px; }
-    .btn-accent { background: var(--accent); color: white; border-color: var(--accent); }
-    .btn-accent:hover { background: var(--accent-hover); }
-
-    /* ====== Student Cards ====== */
-    .student-card { padding: 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
-    .student-card:hover { border-color: var(--text); }
-    .student-avatar { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-size: 14px; font-weight: 500; flex-shrink: 0; }
-    .student-name { font-size: 13px; font-weight: 450; }
-    .student-meta { font-size: 11px; color: var(--text-secondary); }
-
-    /* ====== Scrollbar ====== */
-    ::-webkit-scrollbar { width: 4px; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
 
-    /* ====== Utility ====== */
-    .page-enter { animation: fadeUp 0.3s ease both; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-scale-in { animation: fadeUp 0.25s ease both; }
-    .hover-lift { transition: border-color 0.15s; }
-    .hover-lift:hover { border-color: var(--text); }
+    /* Modal overlay */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+    .modal-content { transform: scale(0.95) translateY(10px); transition: transform 0.2s; max-height: 90vh; overflow-y: auto; }
 
-    /* ====== Search ====== */
-    .search-box { position: relative; }
-    .search-box input { padding-left: 30px; font-size: 12px; width: 200px; }
-    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
+    /* Toast */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: 12px; color: white; font-size: 14px; font-weight: 500; animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
+    .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .toast-info { background: linear-gradient(135deg, #007BFF, #00D4FF); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-    /* ====== FAB ====== */
-    .fab {
-      position: fixed; bottom: 24px; right: 24px;
-      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-      z-index: 40; cursor: pointer; color: var(--bg);
-      background: var(--text); border: none;
-      transition: all 0.2s;
-    }
-    .fab:hover { background: var(--accent); }
-    .fab:active { transform: scale(0.95); }
+    /* Calendar */
+    .cal-slot { min-height: 36px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
+    .cal-slot:hover { background: rgba(0,123,255,0.05); }
+    .dark .cal-slot { border-bottom-color: #334155; }
+    .dark .cal-slot:hover { background: rgba(0,212,255,0.05); }
 
-    /* ====== Legacy compatibility (mapped to old class names used in JS templates) ====== */
-    .cal-floating { border: 1px solid var(--border); }
-    .glass-card { border: 1px solid var(--border); padding: 16px; }
-    .nav-pill { padding: 6px 14px; font-size: 13px; color: var(--text-secondary); cursor: pointer; background: none; border: none; transition: color 0.15s; }
-    .nav-pill:hover { color: var(--text); }
-    .nav-pill.active { color: var(--accent); }
-    .gradient-text { color: var(--accent); }
-    .gradient-bg, .gradient-warm, .gradient-cool, .gradient-rose { background: var(--accent); }
-    .cal-slot { border-bottom: 1px solid var(--border); min-height: 44px; cursor: pointer; }
-    .cal-time { font-size: 11px; color: var(--text-muted); }
-    .lesson-pill { padding: 2px 8px; font-size: 11px; border-left: 3px solid var(--accent); background: var(--accent-light); cursor: pointer; display: inline-block; margin: 1px 0; }
-    .mobile-nav { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
-    .mobile-nav.open { pointer-events: auto; }
-    .mobile-nav-backdrop { position: absolute; inset: 0; background: rgba(26,26,26,0.3); opacity: 0; transition: opacity 0.25s; }
-    .mobile-nav.open .mobile-nav-backdrop { opacity: 1; }
-    .mobile-nav-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: var(--bg); border-right: 1px solid var(--border); transform: translateX(-100%); transition: transform 0.3s ease; padding: 24px; }
-    .mobile-nav.open .mobile-nav-panel { transform: translateX(0); }
+    /* Lesson pill */
+    .lesson-pill { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: transform 0.15s; }
+    .lesson-pill:hover { transform: scale(1.02); }
 
-    /* ====== Enhanced Calendar Week Helpers ====== */
-    .cal-week-body { position: relative; min-height: 100%; }
-    .week-hour-line { position: absolute; left: 0; right: 0; border-top: 1px solid var(--border); pointer-events: none; }
-    .week-half-line { position: absolute; left: 60px; right: 0; border-top: 1px dashed var(--border); pointer-events: none; opacity: 0.4; }
+    /* Context menu */
+    .ctx-menu { position: fixed; z-index: 300; min-width: 200px; background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; padding: 6px; opacity: 0; transform: scale(0.95); transition: opacity 0.15s, transform 0.15s; pointer-events: none; }
+    .ctx-menu.active { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .ctx-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; text-align: left; transition: background 0.1s; }
+    .ctx-menu-item:hover { background: #f1f5f9; }
+    .ctx-menu-item.text-red-500:hover { background: #fef2f2; }
+    .ctx-menu-divider { height: 1px; background: #e2e8f0; margin: 4px 8px; }
+    .dark .ctx-menu { background: #1e293b; border-color: #334155; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .dark .ctx-menu-item:hover { background: #334155; }
+    .dark .ctx-menu-item.text-red-500:hover { background: rgba(239,68,68,0.15); }
+    .dark .ctx-menu-divider { background: #334155; }
 
-    /* ====== Week Lesson Blocks ====== */
-    .week-lesson-block {
-      position: absolute; left: 2px; right: 2px;
-      padding: 3px 6px; font-size: 11px; font-weight: 500;
-      cursor: pointer; overflow: hidden;
-      transition: all 0.15s; z-index: 10; color: #fff;
-      border-left: 3px solid rgba(0,0,0,0.15);
-    }
-    .week-lesson-block:hover { filter: brightness(1.08); z-index: 20; }
-    .week-lesson-block .wl-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .week-lesson-block .wl-time { font-size: 10px; opacity: 0.85; }
-    .week-lesson-block .wl-paydue { position: absolute; top: 3px; right: 4px; font-size: 10px; }
-    .week-lesson-block .wl-type-badge {
-      display: inline-block; font-size: 9px; font-weight: 700;
-      padding: 0px 4px; border-radius: 2px; background: rgba(0,0,0,0.22); color: #fff;
-      margin-left: 4px; vertical-align: middle;
-    }
-    .week-lesson-block .wl-note-ind {
-      position: absolute; bottom: 2px; right: 4px; font-size: 10px; opacity: 0.8;
-    }
+    /* Status badges */
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge-scheduled { background: #dbeafe; color: #1d4ed8; }
+    .badge-completed { background: #d1fae5; color: #059669; }
+    .badge-cancelled { background: #fee2e2; color: #dc2626; }
+    .badge-absent { background: #fef3c7; color: #d97706; }
+    .badge-rescheduled { background: #e0e7ff; color: #4338ca; }
+    .dark .badge-scheduled { background: #1e3a5f; color: #93c5fd; }
+    .dark .badge-completed { background: #064e3b; color: #6ee7b7; }
+    .dark .badge-cancelled { background: #7f1d1d; color: #fca5a5; }
+    .dark .badge-absent { background: #78350f; color: #fcd34d; }
+    .dark .badge-rescheduled { background: #312e81; color: #a5b4fc; }
 
-    /* ====== Month Cells ====== */
-    .month-cell .mc-events { display: flex; flex-direction: column; gap: 1px; }
-    .month-cell .mc-event {
-      font-size: 10px; padding: 1px 4px; border-left: 2px solid var(--accent);
-      background: var(--accent-light); cursor: pointer; overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap; transition: background 0.1s;
-      margin-bottom: 1px;
-    }
-    .month-cell .mc-event:hover { background: rgba(201,101,85,0.15); }
-    .month-cell .mc-event.completed { border-left-color: var(--green); background: rgba(74,138,106,0.08); color: var(--green); }
-    .month-cell .mc-event.cancelled { border-left-color: var(--red); background: rgba(201,85,85,0.08); color: var(--red); text-decoration: line-through; }
-    .month-cell .mc-event.absent { border-left-color: var(--yellow); background: rgba(201,160,69,0.08); color: var(--yellow); }
-    .month-cell .mc-event.custom { border-left-color: var(--blue); background: rgba(85,119,170,0.08); color: var(--blue); }
-    .month-cell .mc-more { font-size: 9px; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 1px 4px; }
-    .month-cell .mc-more:hover { color: var(--accent); }
-    .month-cell .mc-lesson-count {
-      position: absolute; bottom: 4px; right: 5px;
-      font-size: 9px; font-weight: 600; color: var(--text-muted);
-      background: var(--bg); padding: 1px 5px;
-    }
+    /* FAB */
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 40; box-shadow: 0 4px 20px rgba(0,123,255,0.3); transition: transform 0.2s; }
+    .fab:hover { transform: scale(1.1); }
 
-    /* ====== Lesson Info Popup (from teacher calendar) ====== */
-    .lesson-popup {
-      position: fixed; z-index: 250; min-width: 280px; max-width: 340px;
-      background: var(--bg); border: 1px solid var(--border);
-      animation: popupIn 0.2s ease both;
-      transform-origin: top left;
-    }
-    @keyframes popupIn { from { opacity: 0; transform: scale(0.95) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    .lesson-popup .lp-band { height: 4px; width: 100%; }
-    .lesson-popup .lp-body { padding: 12px 16px; }
-    .lesson-popup .lp-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
-    .lesson-popup .lp-sub { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
-    .lesson-popup .lp-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); padding: 2px 0; }
-    .lesson-popup .lp-row strong { color: var(--text); font-weight: 500; }
-    .lesson-popup .lp-close {
-      position: absolute; top: 8px; right: 8px;
-      width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-      border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 14px;
-      transition: color 0.15s;
-    }
-    .lesson-popup .lp-close:hover { color: var(--text); }
+    /* Print */
+    @media print { .no-print { display: none !important; } }
 
-    /* ====== Now Line ====== */
-    .week-now-line {
-      position: absolute; left: 0; right: 0; height: 2px; z-index: 50;
-      pointer-events: none; display: flex; align-items: center;
-    }
-    .week-now-line-bar { flex: 1; height: 1px; background: var(--accent); }
-    .week-now-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-left: -1px; }
-    .week-now-label {
-      background: var(--accent); color: #fff; font-size: 9px; font-weight: 600;
-      padding: 1px 5px; white-space: nowrap; font-variant-numeric: tabular-nums;
-      margin-right: 4px;
-    }
+    /* Transitions for sidebar links */
+    .nav-link { transition: background 0.15s, color 0.15s; }
+    .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.1), rgba(0,212,255,0.1)); color: #007BFF; font-weight: 600; }
+    .dark .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.2), rgba(0,212,255,0.2)); color: #00D4FF; }
   </style>
 </head>
-<body>
+<body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
   <div id="app"></div>
   <div id="modal-root"></div>
   <div class="toast-container" id="toast-container"></div>
@@ -518,7 +273,6 @@
       signInBtn: 'Sign in with Google', confirmBtn: 'Confirm',
       debtLabel: 'Debt', moreLessons: 'more',
       mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
-      customEvent: 'Custom Event', startTime: 'Start', endTime: 'End', saveEvent: 'Save Event', deleteEvent: 'Delete Event', evNote: 'Note',
     },
     uk: {
 
@@ -610,7 +364,6 @@
       signInBtn: 'Увійти через Google', confirmBtn: 'Підтвердити',
       debtLabel: 'Борг', moreLessons: 'ще',
       mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Нд',
-      customEvent: 'Подія', startTime: 'Початок', endTime: 'Кінець', saveEvent: 'Зберегти подію', deleteEvent: 'Видалити подію', evNote: 'Нотатка',
     },
     ru: {
 
@@ -702,7 +455,6 @@
       signInBtn: 'Войти через Google', confirmBtn: 'Подтвердить',
       debtLabel: 'Долг', moreLessons: 'ещё',
       mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс',
-      customEvent: 'Событие', startTime: 'Начало', endTime: 'Конец', saveEvent: 'Сохранить событие', deleteEvent: 'Удалить событие', evNote: 'Заметка',
     },
     de: {
 
@@ -794,7 +546,6 @@
       signInBtn: 'Mit Google anmelden', confirmBtn: 'Bestätigen',
       debtLabel: 'Schulden', moreLessons: 'mehr',
       mon: 'Mo', tue: 'Di', wed: 'Mi', thu: 'Do', fri: 'Fr', sat: 'Sa', sun: 'So',
-      customEvent: 'Ereignis', startTime: 'Start', endTime: 'Ende', saveEvent: 'Ereignis speichern', deleteEvent: 'Ereignis löschen', evNote: 'Notiz',
     },
     pl: {
 
@@ -886,7 +637,6 @@
       signInBtn: 'Zaloguj przez Google', confirmBtn: 'Potwierdź',
       debtLabel: 'Dług', moreLessons: 'więcej',
       mon: 'Pon', tue: 'Wt', wed: 'Śr', thu: 'Czw', fri: 'Pt', sat: 'Sob', sun: 'Niedz',
-      customEvent: 'Wydarzenie', startTime: 'Początek', endTime: 'Koniec', saveEvent: 'Zapisz wydarzenie', deleteEvent: 'Usuń wydarzenie', evNote: 'Notatka',
     },
   };
   const getLang = () => (getSettings().lang || 'en');
@@ -1074,7 +824,7 @@
     navigate(hash) { window.location.hash = hash; },
     start() {
       const handleRoute = () => {
-        const hash = window.location.hash.slice(1) || 'calendar';
+        const hash = window.location.hash.slice(1) || 'dashboard';
         const parts = hash.split('/');
         const base = parts[0];
         this.params = { id: parts[1] || null };
@@ -1082,21 +832,10 @@
         const handler = this.routes[base] || this.routes['dashboard'];
         handler(this.params);
       };
-      window.addEventListener('hashchange', () => {
-        document.getElementById('mobile-nav')?.classList.remove('open');
-        handleRoute();
-      });
+      window.addEventListener('hashchange', handleRoute);
       handleRoute();
     }
   };
-
-  // Close user dropdown on outside click
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('user-menu');
-    if (menu && !e.target.closest('#user-menu') && !e.target.closest('[onclick*="user-menu"]')) {
-      menu.classList.add('hidden');
-    }
-  });
 
   // ==================== TOAST ====================
   const Toast = {
@@ -1245,93 +984,75 @@
     markAllRead() {
       store.getAll('notifications').forEach(n => store.update('notifications', n.id, { isRead: true }));
     }
-  };  // ==================== APP SHELL (Top Navigation) ====================
+  };  // ==================== APP SHELL (Sidebar + TopBar) ====================
   const AppShell = {
     render(content) {
       const notifs = NotificationEngine.getUnread();
       const s = getSettings();
-      const user = firebase.auth().currentUser;
-      const navItems = [
-        { hash: 'dashboard', icon: Icons.home, label: t('dashboard') },
-        { hash: 'students', icon: Icons.users, label: t('students') },
-        { hash: 'calendar', icon: Icons.calendar, label: t('calendar') },
-        { hash: 'payments', icon: Icons.dollar, label: t('payments') },
-        { hash: 'materials', icon: Icons.book, label: t('materialsTitle') },
-        { hash: 'settings', icon: Icons.settings, label: t('settingsTitle') }
-      ];
       document.getElementById('app').innerHTML = `
-      <div class="min-h-screen flex flex-col">
-        <!-- Top Navigation -->
-        <nav class="top-nav">
-          <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-            <div class="flex items-center gap-1">
-              <!-- Logo -->
-              <a href="#calendar" class="flex items-center gap-2 mr-4 py-1.5 px-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">
-                <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-8 h-8 rounded-xl">
-                <span class="text-base font-bold gradient-text hidden sm:inline">TutorPro</span>
+      <div class="flex h-screen overflow-hidden">
+        <!-- Mobile overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden md:hidden" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.add('hidden')"></div>
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex flex-col z-50">
+          <div class="p-5 flex items-center gap-3">
+            <a href="#" onclick="Router.navigate('dashboard');return false" class="flex items-center gap-2">
+            <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-9 h-9 rounded-xl">
+            <span class="text-lg font-bold gradient-text">TutorPro</span>
+          </a>
+          </div>
+          <nav class="flex-1 px-3 space-y-1">
+            ${[
+              { hash: 'dashboard', icon: Icons.home, label: t('dashboard') },
+              { hash: 'students', icon: Icons.users, label: t('students') },
+              { hash: 'calendar', icon: Icons.calendar, label: t('calendar') },
+              { hash: 'payments', icon: Icons.dollar, label: t('payments') },
+              { hash: 'materials', icon: Icons.book, label: t('materialsTitle') },
+              { hash: 'settings', icon: Icons.settings, label: t('settingsTitle') }
+            ].map(l => `
+              <a href="#${l.hash}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${Router.current === l.hash ? 'active' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}">
+                ${l.icon}<span>${l.label}</span>
               </a>
-              <!-- Desktop Nav -->
-              <div class="hidden md:flex items-center gap-0.5">
-                ${navItems.map(l =>
-                  `<a href="#${l.hash}" class="nav-pill ${Router.current === l.hash ? 'active' : ''}">${l.icon}<span>${l.label}</span></a>`
-                ).join('')}
-              </div>
-              <!-- Mobile hamburger -->
-              <button onclick="document.getElementById('mobile-nav').classList.add('open')" class="md:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">${Icons.menu}</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <!-- Search -->
-              <div class="relative hidden sm:block">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">${Icons.search}</span>
-                <input type="text" id="global-search" placeholder="${t('searchPlaceholder')}" class="pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 w-36 lg:w-48 transition-all focus:w-48 lg:focus:w-56" oninput="AppShell.handleSearch(this.value)">
-                <div id="search-results" class="absolute top-full right-0 mt-1.5 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 hidden z-50 max-h-64 overflow-y-auto"></div>
-              </div>
-              ${langSelector()}
-              <button onclick="toggleTheme()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">${s.theme === 'dark' ? Icons.sun : Icons.moon}</button>
-              <button onclick="AppShell.showNotifications()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 relative transition">
-                ${Icons.bell}
-                ${notifs.length > 0 ? `<span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">${notifs.length}</span>` : ''}
-              </button>
-              <!-- Avatar -->
-              <div class="relative group">
-                ${user && user.photoURL
-                  ? `<img src="${user.photoURL}" class="w-8 h-8 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary-500 transition-all" alt="avatar" onclick="document.getElementById('user-menu').classList.toggle('hidden')">`
-                  : `<div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-xs font-bold cursor-pointer" onclick="document.getElementById('user-menu').classList.toggle('hidden')">${(user?.displayName || 'T').charAt(0)}</div>`
+            `).join('')}
+          </nav>            <div class="p-4 border-t border-slate-100 dark:border-slate-700">
+              <div class="flex items-center gap-3">
+                ${firebase.auth().currentUser && firebase.auth().currentUser.photoURL
+                  ? `<img src="${firebase.auth().currentUser.photoURL}" class="w-9 h-9 rounded-full" alt="avatar">`
+                  : `<div class="w-9 h-9 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-bold">${(firebase.auth().currentUser?.displayName || 'T').charAt(0)}</div>`
                 }
-                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 px-1 z-50">
-                  <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700 mb-1">
-                    <div class="text-xs text-slate-400">${t('signedInAs')}</div>
-                    <div class="text-sm font-semibold truncate">${user?.displayName || s.name || t('tutor')}</div>
-                  </div>
-                  <button onclick="signOut()" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition">${Icons.logout || '↩'} ${t('signOut')}</button>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs text-slate-400">${t('signedInAs')}</div>
+                  <div class="text-sm font-semibold truncate">${firebase.auth().currentUser?.displayName || s.name || t('tutor')}</div>
                 </div>
               </div>
+              <button onclick="signOut()" class="mt-2 w-full text-xs text-slate-400 hover:text-red-500 transition flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">${Icons.logout || '↩'} ${t('signOut')}</button>
             </div>
-          </div>
-        </nav>
-        <!-- Page content -->
-        <main class="flex-1 overflow-y-auto" id="page-content">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 page-enter" id="page-wrapper">
+        </aside>
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <!-- TopBar -->
+          <header class="flex items-center justify-between px-4 md:px-6 py-3 border-b border-slate-100 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg">
+            <div class="flex items-center gap-3">
+              <button onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('hidden')" class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">${Icons.menu}</button>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">${Icons.search}</span>
+                <input type="text" id="global-search" placeholder="${t('searchPlaceholder')}" class="pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-48 md:w-64" oninput="AppShell.handleSearch(this.value)">
+                <div id="search-results" class="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 hidden z-50 max-h-64 overflow-y-auto"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${langSelector()}
+              <button onclick="toggleTheme()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition">${s.theme === 'dark' ? Icons.sun : Icons.moon}</button>
+              <button onclick="AppShell.showNotifications()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 relative transition">
+                ${Icons.bell}
+                ${notifs.length > 0 ? `<span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">${notifs.length}</span>` : ''}
+              </button>
+            </div>
+          </header>
+          <!-- Page content -->
+          <main class="flex-1 overflow-y-auto p-4 md:p-6" id="page-content">
             ${content}
-          </div>
-        </main>
-      </div>
-      <!-- Mobile Nav Drawer -->
-      <div id="mobile-nav" class="mobile-nav" onclick="if(event.target === this || event.target.classList.contains('mobile-nav-backdrop')) this.classList.remove('open')">
-        <div class="mobile-nav-backdrop"></div>
-        <div class="mobile-nav-panel">
-          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
-            <img src="https://raw.githubusercontent.com/CodenameXXV/tutor/refs/heads/main/icon.png" alt="TutorPro" class="w-10 h-10 rounded-xl">
-            <div>
-              <div class="font-bold gradient-text">TutorPro</div>
-              <div class="text-xs text-slate-400">${user?.displayName || t('tutor')}</div>
-            </div>
-          </div>
-          <div class="space-y-1">
-            ${navItems.map(l =>
-              `<a href="#${l.hash}" onclick="document.getElementById('mobile-nav').classList.remove('open')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${Router.current === l.hash ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-500 font-semibold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}">${l.icon}<span>${l.label}</span></a>`
-            ).join('')}
-          </div>
+          </main>
         </div>
       </div>`;
     },
@@ -1914,317 +1635,140 @@
   };
 
   // ==================== CALENDAR VIEW ====================
-  // ====== Lesson Types (from teacher calendar) ======
-  const LESSON_TYPES = [
-    {id:'lesson',label:'Lesson'},{id:'test',label:'Test'},{id:'lab',label:'Lab'},{id:'control',label:'Control'},
-    {id:'reading',label:'Reading'},{id:'listening',label:'Listening'},{id:'writing',label:'Writing'},{id:'speaking',label:'Speaking'},
-    {id:'dictation',label:'Dictation'},{id:'independent',label:'Independent'},{id:'practical',label:'Practical'},
-    {id:'creative',label:'Creative'}
-  ];
-  const CUSTOM_EVENTS_KEY = 'tb_customEvents';
-  let customEvents = [];
-  function loadCustomEvents() { try{const s=localStorage.getItem(CUSTOM_EVENTS_KEY);if(s)customEvents=JSON.parse(s)}catch(e){customEvents=[]} }
-  function saveCustomEvents() { try{localStorage.setItem(CUSTOM_EVENTS_KEY,JSON.stringify(customEvents))}catch(e){} }
-  function getCustomEventsForDate(dk) {
-    const parts=dk.split('-');
-    const d=new Date(+parts[0],+parts[1],+parts[2]);
-    const wi=(d.getDay()+6)%7;
-    return customEvents.filter(ev => {
-      if(ev.recurring) {
-        const ep=ev.date.split('-');
-        const ed=new Date(+ep[0],+ep[1],+ep[2]);
-        return (ed.getDay()+6)%7===wi && d>=ed;
-      }
-      return ev.date===dk;
-    });
-  }
-  loadCustomEvents();
-
-  function dateKey(d) { return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
-  function getMonday(d) { const date=new Date(d); const day=date.getDay(); date.setDate(date.getDate()-day+(day===0?-6:1)); date.setHours(0,0,0,0); return date; }
-  function timeToMinutes(t) { const[h,m]=t.split(':').map(Number); return h*60+m; }
-  function getLessonType(lesson) { return lesson.lessonType || 'lesson'; }
-  function getTypeInfo(id) { return LESSON_TYPES.find(t=>t.id===id) || LESSON_TYPES[0]; }
-
   const CalendarView = {
     viewMode: 'week',
     currentDate: new Date(),
-    DAY_START: 6,
-    DAY_END: 21,
-    HOUR_HEIGHT: 60,
-
     render() {
       const lessons = store.getAll('lessons');
       const students = store.getAll('students');
-      const monthName = this.currentDate.toLocaleString(getLang()==='uk'?'uk':getLang()==='ru'?'ru':getLang()==='de'?'de':getLang()==='pl'?'pl':'en', { month: 'long', year: 'numeric' });
       const content = `
-        <div class="cal-header">
-          <div class="cal-title">${monthName}</div>
-          <div class="cal-nav">
-            <button class="cal-today-btn" onclick="CalendarView.currentDate=new Date();CalendarView.render()">${t('today')}</button>
-            <button class="cal-nav-btn" onclick="CalendarView.navigate(-1)">‹</button>
-            <button class="cal-nav-btn" onclick="CalendarView.navigate(1)">›</button>
-            <div class="view-toggle">
-              <button onclick="CalendarView.viewMode='day';CalendarView.render()" class="${this.viewMode === 'day' ? 'active' : ''}">${t('day')}</button>
-              <button onclick="CalendarView.viewMode='week';CalendarView.render()" class="${this.viewMode === 'week' ? 'active' : ''}">${t('week')}</button>
-              <button onclick="CalendarView.viewMode='month';CalendarView.render()" class="${this.viewMode === 'month' ? 'active' : ''}">${t('month')}</button>
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-2xl font-bold">${t('calendar')}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${this.currentDate.toLocaleString(getLang()==='uk'?'uk':'en', { month: 'long', year: 'numeric' })}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="CalendarView.navigate(-1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.chevronLeft}</button>
+            <button onclick="CalendarView.currentDate=new Date();CalendarView.render()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm hover:bg-slate-50 dark:hover:bg-slate-700">${t('today')}</button>
+            <button onclick="CalendarView.navigate(1)" class="p-2 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">${Icons.chevronRight}</button>
+            <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 ml-2">
+              ${['day','week','month'].map(m => `<button onclick="CalendarView.viewMode='${m}';CalendarView.render()" class="px-3 py-1 rounded-lg text-xs font-medium ${this.viewMode === m ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}">${m === 'day' ? t('day') : m === 'week' ? t('week') : t('month')}</button>`).join('')}
             </div>
           </div>
         </div>
-        <div style="flex:1;overflow:hidden;position:relative">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
           ${this.viewMode === 'day' ? this.renderDay(lessons, students) : this.viewMode === 'week' ? this.renderWeek(lessons, students) : this.renderMonth(lessons, students)}
         </div>
-        <button onclick="CalendarView.openForm()" class="fab">+</button>`;
+        <button onclick="CalendarView.openForm()" class="fab gradient-bg text-white">${Icons.plus}</button>`;
       AppShell.render(content);
     },
-
     renderWeek(lessons, students) {
-      const startOfWeek = getMonday(this.currentDate);
-      const totalH = this.DAY_END - this.DAY_START;
-      const totalPx = totalH * this.HOUR_HEIGHT;
-      const lang = getLang();
-      let html = '<div class="cal-week-grid" style="grid-template-columns:60px repeat(7,1fr)">';
-
-      // Day headers
-      html += '<div class="cal-week-header"></div>';
+      const startOfWeek = new Date(this.currentDate);
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+      // Dynamic hour range based on lessons
+      const weekEnd = new Date(startOfWeek); weekEnd.setDate(startOfWeek.getDate() + 6);
+      const weekLessonsAll = lessons.filter(l => { const d = new Date(l.startAt); return d >= startOfWeek && d <= weekEnd; });
+      let minH = 8, maxH = 21;
+      if (weekLessonsAll.length) {
+        const hrs = weekLessonsAll.map(l => new Date(l.startAt).getHours());
+        minH = Math.max(6, Math.min(...hrs) - 1);
+        maxH = Math.min(22, Math.max(...hrs) + 2);
+      }
+      const hours = Array.from({length: maxH - minH}, (_, i) => i + minH);
+      let html = '<div class="overflow-x-auto"><div class="min-w-[700px]">';
+      html += '<div class="grid grid-cols-8 border-b border-slate-100 dark:border-slate-700">';
+      html += '<div class="p-2 text-xs text-slate-400"></div>';
       for (let d = 0; d < 7; d++) {
         const day = new Date(startOfWeek);
         day.setDate(startOfWeek.getDate() + d);
         const today = isToday(day);
-        const wi = (day.getDay()+6)%7;
-        html += `<div class="cal-week-header ${today?'today-col':''} ${wi>=5?'weekend-col':''}" style="${wi>=5?'opacity:0.5':''}">
-          ${day.toLocaleDateString(lang, {weekday:'short'})} <strong>${day.getDate()}</strong>
+        html += `<div class="p-2 text-center border-l border-slate-100 dark:border-slate-700 ${today ? 'bg-primary-50 dark:bg-primary-900/20' : ''}">
+          <div class="text-xs text-slate-400">${day.toLocaleDateString(getLang(), {weekday:'short'})}</div>
+          <div class="text-lg font-bold ${today ? 'text-primary-500' : ''}">${day.getDate()}</div>
         </div>`;
       }
-
-      // Time labels + day columns
-      for (let d = -1; d < 7; d++) {
-        if (d === -1) {
-          // Time column
-          html += '<div class="cal-time-slot" style="grid-column:1;border-right:1px solid var(--border);position:relative;height:'+totalPx+'px;border-bottom:none">';
-          for (let h = this.DAY_START; h <= this.DAY_END; h++) {
-            html += `<div class="cal-time-label" style="top:${(h-this.DAY_START)*this.HOUR_HEIGHT}px">${String(h).padStart(2,'0')}:00</div>`;
-          }
-          html += '</div>';
-        } else {
+      html += '</div>';
+      hours.forEach(h => {
+        html += `<div class="grid grid-cols-8 border-b border-slate-50 dark:border-slate-700/50">`;
+        html += `<div class="p-2 text-xs text-slate-400 text-right pr-3">${String(h).padStart(2,'0')}:00</div>`;
+        for (let d = 0; d < 7; d++) {
           const day = new Date(startOfWeek);
           day.setDate(startOfWeek.getDate() + d);
-          const dk = dateKey(day);
+          day.setHours(h, 0, 0, 0);
+          const dayLessons = lessons.filter(l => { const ld = new Date(l.startAt); return ld.toDateString() === day.toDateString() && ld.getHours() === h; });
           const today = isToday(day);
-          const wi = (day.getDay()+6)%7;
-          html += `<div class="cal-day-slot ${today?'today-slot':''}" style="height:${totalPx}px;position:relative" data-dk="${dk}">`;
-
-          // Hour lines
-          for (let h = this.DAY_START; h <= this.DAY_END; h++) {
-            const top = (h - this.DAY_START) * this.HOUR_HEIGHT;
-            html += `<div style="position:absolute;left:0;right:0;top:${top}px;border-top:1px solid var(--border);pointer-events:none"></div>`;
-            if (h < this.DAY_END) {
-              html += `<div style="position:absolute;left:0;right:0;top:${top+30}px;border-top:1px dashed var(--border);pointer-events:none;opacity:0.3"></div>`;
-            }
-          }
-
-          // Lessons for this day
-          const dayLessons = lessons.filter(l => new Date(l.startAt).toDateString() === day.toDateString());
+          html += `<div class="cal-slot border-l border-slate-100 dark:border-slate-700 p-1 relative ${today ? 'bg-primary-50/30 dark:bg-primary-900/10' : ''}" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
           dayLessons.forEach(l => {
             const st = students.find(s => s.id === l.studentId);
-            const startMin = new Date(l.startAt).getHours()*60 + new Date(l.startAt).getMinutes();
-            const endMin = new Date(l.endAt).getHours()*60 + new Date(l.endAt).getMinutes();
-            const top = ((startMin/60) - this.DAY_START) * this.HOUR_HEIGHT;
-            const height = Math.max(((endMin - startMin)/60) * this.HOUR_HEIGHT, 20);
-            if (top < 0 || top > totalPx) return;
-            const payDue = st && needsPayment(st, l);
-            const typeInfo = getTypeInfo(getLessonType(l));
-            const isCustomType = l.lessonType && l.lessonType !== 'lesson';
-            const statusColors = { scheduled: 'var(--blue)', completed: 'var(--green)', cancelled: 'var(--red)', absent: 'var(--yellow)', rescheduled: 'var(--accent)' };
-            const bgColor = payDue ? 'var(--red)' : (statusColors[l.status] || 'var(--blue)');
-            html += `<div class="week-lesson-block" style="top:${top}px;height:${height}px;background:${bgColor}" 
-              onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" 
-              oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)"
-              onmouseenter="CalendarView.showLessonPopup('${l.id}',event)"
-              data-id="${l.id}">
-              ${isCustomType ? `<span class="wl-type-badge">${typeInfo.label}</span>` : ''}
-              <div class="wl-title">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>
-              <div class="wl-time">${formatTime(l.startAt)}${l.title ? ` · ${l.title}` : ''}</div>
-          ${payDue ? `<span class="wl-paydue">⚠️</span>` : ''}
-        </div>`;
+            const colors = { scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', absent: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', rescheduled: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' };
+            const payDue = needsPayment(st, l);
+            html += `<div class="lesson-pill relative ${colors[l.status] || colors.scheduled} truncate mb-0.5 ${payDue ? 'ring-2 ring-red-400 dark:ring-red-500' : ''}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>`;
           });
-
-          // Custom events for this day
-          const cEvs = getCustomEventsForDate(dk);
-          cEvs.forEach(ev => {
-            const sm = timeToMinutes(ev.startTime);
-            const em = timeToMinutes(ev.endTime);
-            const top = ((sm/60) - this.DAY_START) * this.HOUR_HEIGHT;
-            const height = Math.max(((em - sm)/60) * this.HOUR_HEIGHT, 20);
-            if (top < 0 || top > totalPx) return;
-            html += `<div class="week-lesson-block" style="top:${top}px;height:${height}px;background:var(--blue)"
-              onclick="event.stopPropagation();CalendarView.editCustomEvent('${ev.id}')"
-              oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.deleteCustomEvent('${ev.id}')">
-              <div class="wl-title">📌 ${ev.title}</div>
-              <div class="wl-time">${ev.startTime} - ${ev.endTime}</div>
-            </div>`;
-          });
-
-          // Click to add lesson
-          html += `<div style="position:absolute;inset:0;cursor:pointer" onclick="CalendarView.openForm(null, '${day.toISOString()}')"></div>`;
           html += '</div>';
         }
-      }
-
-      html += '</div>';
-
-      // Now line
-      setTimeout(() => {
-        const grid = document.querySelector('.cal-week-grid');
-        if (!grid) return;
-        const existing = document.getElementById('cal-now-line');
-        if (existing) existing.remove();
-        const now = new Date();
-        const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
-        let colIdx = -1;
-        for (let i = 0; i < 7; i++) {
-          const dt = new Date(getMonday(this.currentDate));
-          dt.setDate(dt.getDate() + i);
-          if (dt.getTime() === todayMidnight.getTime()) { colIdx = i + 1; break; }
-        }
-        if (colIdx < 0) return;
-        const nm = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
-        const top = ((nm/60) - this.DAY_START) * this.HOUR_HEIGHT;
-        if (top < 0 || top > (this.DAY_END - this.DAY_START) * this.HOUR_HEIGHT) return;
-        const nl = document.createElement('div');
-        nl.id = 'cal-now-line';
-        nl.style.cssText = `position:absolute;left:0;right:0;top:${top}px;z-index:50;pointer-events:none;display:flex;align-items:center`;
-        nl.innerHTML = `<span style="background:var(--accent);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;font-variant-numeric:tabular-nums">${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}</span><span style="flex:1;height:1px;background:var(--accent)"></span>`;
-        grid.appendChild(nl);
-      }, 50);
-
-      return html;
-    },
-
-    renderDay(lessons, students) {
-      const day = new Date(this.currentDate);
-      const dk = dateKey(day);
-      const totalH = this.DAY_END - this.DAY_START;
-      const totalPx = totalH * this.HOUR_HEIGHT;
-      const dateStr = day.toLocaleDateString(getLang(), { weekday: 'long', month: 'long', day: 'numeric' });
-      let html = `<div style="height:100%;overflow-y:auto;position:relative">
-        <div style="padding:8px 16px;font-size:12px;color:var(--text-secondary);border-bottom:1px solid var(--border)">${dateStr}</div>
-        <div style="position:relative;height:${totalPx}px">`;
-
-      for (let h = this.DAY_START; h <= this.DAY_END; h++) {
-        const top = (h - this.DAY_START) * this.HOUR_HEIGHT;
-        html += `<div style="position:absolute;left:60px;right:0;top:${top}px;border-top:1px solid var(--border)"></div>`;
-        html += `<div style="position:absolute;left:0;top:${top - 6}px;width:56px;text-align:right;padding-right:8px;font-size:10px;color:var(--text-muted)">${String(h).padStart(2,'0')}:00</div>`;
-      }
-
-      const dayLessons = lessons.filter(l => new Date(l.startAt).toDateString() === day.toDateString());
-      dayLessons.forEach(l => {
-        const st = students.find(s => s.id === l.studentId);
-        const startMin = new Date(l.startAt).getHours()*60 + new Date(l.startAt).getMinutes();
-        const endMin = new Date(l.endAt).getHours()*60 + new Date(l.endAt).getMinutes();
-        const top = ((startMin/60) - this.DAY_START) * this.HOUR_HEIGHT;
-        const height = Math.max(((endMin - startMin)/60) * this.HOUR_HEIGHT, 20);
-        if (top < 0 || top > totalPx) return;
-        const payDue = st && needsPayment(st, l);
-        html += `<div style="position:absolute;left:64px;right:8px;top:${top}px;height:${height}px;background:${payDue ? 'var(--red)' : 'var(--text)'};color:#fff;padding:2px 8px;font-size:11px;cursor:pointer;overflow:hidden;border-left:3px solid rgba(255,255,255,0.2)" 
-          onclick="CalendarView.openForm('${l.id}')" 
-          oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)"
-          onmouseenter="CalendarView.showLessonPopup('${l.id}',event)">
-          <div style="font-weight:500">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}${l.title ? ` · ${l.title}` : ''}</div>
-          <div style="font-size:10px;opacity:0.8">${formatTime(l.startAt)} - ${formatTime(l.endAt)}</div>
-        </div>`;
+        html += '</div>';
       });
-
-      // Custom events
-      const cEvs = getCustomEventsForDate(dk);
-      cEvs.forEach(ev => {
-        const sm = timeToMinutes(ev.startTime);
-        const em = timeToMinutes(ev.endTime);
-        const top = ((sm/60) - this.DAY_START) * this.HOUR_HEIGHT;
-        const height = Math.max(((em - sm)/60) * this.HOUR_HEIGHT, 20);
-        if (top < 0 || top > totalPx) return;
-        html += `<div style="position:absolute;left:64px;right:8px;top:${top}px;height:${height}px;background:var(--blue);color:#fff;padding:2px 8px;font-size:11px;cursor:pointer;overflow:hidden" onclick="CalendarView.editCustomEvent('${ev.id}')">📌 ${ev.title}<div style="font-size:10px;opacity:0.8">${ev.startTime} - ${ev.endTime}</div></div>`;
-      });
-
       html += '</div></div>';
       return html;
     },
-
+    renderDay(lessons, students) {
+      const day = new Date(this.currentDate);
+      // Dynamic hour range based on lessons
+      const dayLessonsAll = lessons.filter(l => new Date(l.startAt).toDateString() === day.toDateString());
+      let minH = 8, maxH = 21;
+      if (dayLessonsAll.length) {
+        const hrs = dayLessonsAll.map(l => new Date(l.startAt).getHours());
+        minH = Math.max(6, Math.min(...hrs) - 1);
+        maxH = Math.min(22, Math.max(...hrs) + 2);
+      }
+      const hours = Array.from({length: maxH - minH}, (_, i) => i + minH);
+      let html = '<div class="divide-y divide-slate-50 dark:divide-slate-700/50">';
+      hours.forEach(h => {
+        const dayLessons = lessons.filter(l => { const ld = new Date(l.startAt); return ld.toDateString() === day.toDateString() && ld.getHours() === h; });
+        html += `<div class="flex gap-3 p-2 min-h-[40px] hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">`;
+        html += `<div class="w-14 text-xs text-slate-400 text-right pt-0.5 flex-shrink-0">${String(h).padStart(2,'0')}:00</div>`;
+        html += `<div class="flex-1 cursor-pointer" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
+        dayLessons.forEach(l => {
+          const st = students.find(s => s.id === l.studentId);
+          const payDue = needsPayment(st, l);
+          html += `<div class="${payDue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'} rounded-xl p-3 mb-1 cursor-pointer border" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">
+            <div class="font-semibold text-sm flex items-center gap-1">${payDue ? '💵' : ''} ${st ? st.name : t('lesson')}</div>
+            <div class="text-xs text-slate-400">${formatTime(l.startAt)} - ${formatTime(l.endAt)} · <span class="badge badge-${l.status}">${l.status}</span></div>
+            ${l.title ? `<div class="text-xs mt-1">${l.title}</div>` : ''}
+            ${payDue ? `<div class="text-[10px] text-red-500 font-medium mt-1">${t('paymentDue')}</div>` : ''}
+          </div>`;
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+      return html;
+    },
     renderMonth(lessons, students) {
       const year = this.currentDate.getFullYear();
       const month = this.currentDate.getMonth();
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
       const startPad = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-      const totalCells = startPad + lastDay.getDate();
-      const rows = Math.ceil(totalCells / 7);
-      const totalDays = rows * 7;
-      const today = new Date(); today.setHours(0,0,0,0);
-      
-      let html = '<div class="cal-month-grid" style="grid-template-rows:' + Array(rows+1).fill('auto').join(' ') + '">';
-      // Day headers
-      [t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')].forEach((d, i) => {
-        html += `<div class="cal-week-header ${i >= 5 ? '' : ''}" style="border-bottom:1px solid var(--border);padding:6px 0;font-size:11px">${d}</div>`;
-      });
-      // Empty cells
-      for (let i = 0; i < startPad; i++) {
-        const prevMonthDay = new Date(year, month, 0);
-        prevMonthDay.setDate(prevMonthDay.getDate() - startPad + 1 + i);
-        html += `<div class="month-cell other-month"><div class="month-date" style="color:var(--text-muted)">${prevMonthDay.getDate()}</div></div>`;
-      }
-      // Day cells
+      let html = '<div class="grid grid-cols-7">';
+      [t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')].forEach(d => { html += `<div class="p-1.5 text-xs font-semibold text-slate-400 text-center border-b border-slate-100 dark:border-slate-700">${d}</div>`; });
+      for (let i = 0; i < startPad; i++) html += '<div class="p-1 min-h-[56px] border-b border-r border-slate-50 dark:border-slate-700/50"></div>';
       for (let d = 1; d <= lastDay.getDate(); d++) {
         const date = new Date(year, month, d);
-        const isT = date.getTime() === today.getTime();
+        const today = isToday(date);
         const dayLessons = lessons.filter(l => new Date(l.startAt).toDateString() === date.toDateString());
-        const dk = dateKey(date);
-        const cEvs = getCustomEventsForDate(dk);
-        const hasCustom = cEvs.length > 0;
-        
-        html += `<div class="month-cell ${isT ? 'today-cell' : ''}" onclick="CalendarView.currentDate=new Date(${year},${month},${d});CalendarView.viewMode='day';CalendarView.render()">`;
-        html += `<div class="month-date ${isT ? 'today' : ''}">${d}</div>`;
-        
-        // Show lessons as chips (max 2)
-        if (dayLessons.length > 0 || hasCustom) {
-          html += '<div class="mc-events">';
-          const maxShow = 2;
-          let shown = 0;
-          for (let li = 0; li < Math.min(dayLessons.length, maxShow); li++) {
-            const l = dayLessons[li];
+        html += `<div class="p-1.5 min-h-[56px] border-b border-r border-slate-50 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 ${today ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''}" onclick="CalendarView.currentDate=new Date(${year},${month},${d});CalendarView.viewMode='day';CalendarView.render()">
+          <div class="text-xs font-semibold ${today ? 'text-primary-500' : ''}">${d}</div>
+          ${dayLessons.slice(0,2).map(l => {
             const st = students.find(s => s.id === l.studentId);
-            const payDue = st && needsPayment(st, l);
-            html += `<div class="mc-event ${l.status}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵' : ''}${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
-            shown++;
-          }
-          // Custom events
-          for (let ci = 0; ci < Math.min(cEvs.length, Math.max(0, maxShow - shown)); ci++) {
-            const ev = cEvs[ci];
-            html += `<div class="mc-event custom" onclick="event.stopPropagation();CalendarView.editCustomEvent('${ev.id}')">📌 ${ev.title}</div>`;
-            shown++;
-          }
-          // More count
-          const remaining = dayLessons.length + cEvs.length - shown;
-          if (remaining > 0) {
-            html += `<div class="mc-more" onclick="event.stopPropagation();CalendarView.currentDate=new Date(${year},${month},${d});CalendarView.viewMode='day';CalendarView.render()">+${remaining} more</div>`;
-          }
-          // Lesson count badge
-          if (dayLessons.length > 0) {
-            html += `<span class="mc-lesson-count">${dayLessons.length}</span>`;
-          }
-          html += '</div>';
-        }
-        html += '</div>';
-      }
-      // Fill remaining cells
-      const used = startPad + lastDay.getDate();
-      const remaining = rows * 7 - used;
-      for (let i = 1; i <= remaining; i++) {
-        html += `<div class="month-cell other-month"><div class="month-date" style="color:var(--text-muted)">${i}</div></div>`;
+            const payDue = needsPayment(st, l);
+            return `<div class="lesson-pill relative ${payDue ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 ring-1 ring-red-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'} truncate mt-0.5 text-[10px]" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')" oncontextmenu="event.preventDefault();event.stopPropagation();CalendarView.showContextMenu('${l.id}',event)">${payDue ? '💵 ' : ''}${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
+          }).join('')}
+          ${dayLessons.length > 2 ? `<div class="text-[10px] text-slate-400 mt-0.5">+${dayLessons.length-2} ${t('moreLessons')}</div>` : ''}
+        </div>`;
       }
       html += '</div>';
       return html;
     },
-
     navigate(dir) {
       if (this.viewMode === 'day') this.currentDate.setDate(this.currentDate.getDate() + dir);
       else if (this.viewMode === 'week') this.currentDate.setDate(this.currentDate.getDate() + dir * 7);
@@ -2241,56 +1785,34 @@
       const activePackages = packages.filter(p => p.status === 'active');
 
       Modal.open(`
-        <div class="modal-title">${lesson ? t('editLesson') : t('newLesson')}</div>
-        <form onsubmit="event.preventDefault();CalendarView.save('${id || ''}')">
-          <div class="field">
-            <label>${t('student')}</label>
-            <select name="studentId">
+        <h3 class="text-lg font-bold mb-4">${lesson ? t('editLesson') : t('newLesson')}</h3>
+        <form onsubmit="event.preventDefault();CalendarView.save('${id || ''}')" class="space-y-3">
+          <div><label class="text-xs font-semibold text-slate-500">${t('student')}</label>
+            <select name="studentId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
               <option value="">${t('select')}</option>
               ${students.map(s => `<option value="${s.id}" ${lesson && lesson.studentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
             </select>
           </div>
-          <div class="field">
-            <label>${t('title')}</label>
-            <input name="title" value="${lesson ? lesson.title || '' : ''}" placeholder="${t('lessonTopic')}">
+          <div><label class="text-xs font-semibold text-slate-500">${t('title')}</label><input name="title" value="${lesson ? lesson.title || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm" placeholder="${t('lessonTopic')}"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('date')}</label><input name="date" type="date" required value="${defaultDate.toISOString().split('T')[0]}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('time')}</label><input name="time" type="time" required value="${String(defaultDate.getHours()).padStart(2,'0')}:${String(defaultDate.getMinutes()).padStart(2,'0')}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="field">
-              <label>${t('date')}</label>
-              <input name="date" type="date" required value="${defaultDate.toISOString().split('T')[0]}">
-            </div>
-            <div class="field">
-              <label>${t('time')}</label>
-              <input name="time" type="time" required value="${String(defaultDate.getHours()).padStart(2,'0')}:${String(defaultDate.getMinutes()).padStart(2,'0')}">
-            </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('duration')}</label><input name="duration" type="number" value="60" min="15" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+            <div><label class="text-xs font-semibold text-slate-500">${t('status')}</label><select name="status" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">
+              ${['scheduled','completed','cancelled','rescheduled','absent'].map(s => `<option value="${s}" ${lesson && lesson.status === s ? 'selected' : ''}>${s === 'scheduled' ? t('scheduled') : s === 'completed' ? t('completed') : s === 'cancelled' ? t('cancelledStatus') : s === 'rescheduled' ? t('rescheduled') : t('absent')}</option>`).join('')}
+            </select></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="field">
-              <label>${t('duration')}</label>
-              <input name="duration" type="number" value="60" min="15">
-            </div>
-            <div class="field">
-              <label>${t('status')}</label>
-              <select name="status">
-                ${['scheduled','completed','cancelled','rescheduled','absent'].map(s => `<option value="${s}" ${lesson && lesson.status === s ? 'selected' : ''}>${s === 'scheduled' ? t('scheduled') : s === 'completed' ? t('completed') : s === 'cancelled' ? t('cancelledStatus') : s === 'rescheduled' ? t('rescheduled') : t('absent')}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-          ${!lesson ? `<div class="field" style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="recurring" id="recurring-check" style="width:16px;height:16px;flex-shrink:0"><label for="recurring-check" style="font-size:13px;text-transform:none;letter-spacing:0;margin:0">${t('repeatWeekly')}</label><input name="repeatCount" type="number" value="4" min="1" max="52" style="width:60px"> <label style="font-size:13px;text-transform:none;letter-spacing:0;margin:0">${t('times')}</label></div>` : ''}
-          ${activePackages.length > 0 ? `<div class="field"><label>${t('linkToPackage')}</label><select name="packageId"><option value="">${t('none')}</option>${activePackages.map(p => { const st = students.find(s => s.id === p.studentId); return `<option value="${p.id}" ${lesson && lesson.packageId === p.id ? 'selected' : ''}>${st ? st.name : ''} — ${p.totalLessons - p.usedLessons} left</option>`; }).join('')}</select></div>` : ''}
-          <div class="field">
-            <label>${t('notes')}</label>
-            <textarea name="description" rows="2">${lesson ? lesson.description || '' : ''}</textarea>
-          </div>
-          <div class="field">
-            <label>${t('homework')}</label>
-            <textarea name="homework" rows="2">${lesson ? lesson.homework || '' : ''}</textarea>
-          </div>
-          <div style="display:flex;gap:8px;padding-top:8px">
-            <button type="submit" class="btn btn-primary" style="flex:1">${lesson ? t('updateLesson') : t('createLesson')}</button>
-            ${lesson ? `<button type="button" onclick="CalendarView.markAsPaid('${lesson.id}')" class="btn btn-accent">💵 ${t('markAsPaid')}</button>` : ''}
-            ${lesson ? `<button type="button" onclick="CalendarView.deleteLesson('${lesson.id}')" class="btn" style="color:var(--red);border-color:var(--red)">${t('deleteLesson')}</button>` : ''}
-            <button type="button" onclick="Modal.close()" class="btn">${t('cancel')}</button>
+          ${!lesson ? `<div class="flex items-center gap-2"><input type="checkbox" name="recurring" id="recurring-check" class="rounded"><label for="recurring-check" class="text-sm">${t('repeatWeekly')}</label><input name="repeatCount" type="number" value="4" min="1" max="52" class="w-16 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"> ${t('times')}</div>` : ''}
+          ${activePackages.length > 0 ? `<div><label class="text-xs font-semibold text-slate-500">${t('linkToPackage')}</label><select name="packageId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="">${t('none')}</option>${activePackages.map(p => { const st = students.find(s => s.id === p.studentId); return `<option value="${p.id}" ${lesson && lesson.packageId === p.id ? 'selected' : ''}>${st ? st.name : ''} — ${p.totalLessons - p.usedLessons} left</option>`; }).join('')}</select></div>` : ''}
+          <div><label class="text-xs font-semibold text-slate-500">${t('notes')}</label><textarea name="description" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">${lesson ? lesson.description || '' : ''}</textarea></div>
+          <div><label class="text-xs font-semibold text-slate-500">${t('homework')}</label><textarea name="homework" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">${lesson ? lesson.homework || '' : ''}</textarea></div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="flex-1 gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${lesson ? t('updateLesson') : t('createLesson')}</button>
+            ${lesson ? `<button type="button" onclick="CalendarView.markAsPaid('${lesson.id}')" class="px-4 py-2.5 rounded-xl border border-emerald-200 text-emerald-600 text-sm font-medium hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20 transition">💵 ${t('markAsPaid')}</button>` : ''}
+            ${lesson ? `<button type="button" onclick="CalendarView.deleteLesson('${lesson.id}')" class="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-900/20">${t('deleteLesson')}</button>` : ''}
+            <button type="button" onclick="Modal.close()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm">${t('cancel')}</button>
           </div>
         </form>
       `, { size: 'lg' });
@@ -2376,12 +1898,17 @@
         });
       } else {
         Modal.open(`
-          <div class="modal-title">${t('deleteLesson')}</div>
-          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">${t('deleteLessonConfirm')}</p>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <button onclick="CalendarView._deleteOne('${id}')" class="btn" style="color:var(--red);border-color:var(--red);width:100%">${t('deleteThisLesson')}</button>
-            <button onclick="CalendarView._deleteWeekly('${id}')" class="btn btn-primary" style="width:100%;text-align:center">${t('deleteAllWeekly')} (${weeklyLessons.length + 1})</button>
-            <button onclick="Modal.close()" class="btn" style="width:100%;text-align:center">${t('cancel')}</button>
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2">${t('deleteLesson')}</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">${t('deleteLessonConfirm')}</p>
+            <div class="space-y-2">
+              <button onclick="CalendarView._deleteOne('${id}')" class="w-full px-5 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 transition">${t('deleteThisLesson')}</button>
+              <button onclick="CalendarView._deleteWeekly('${id}')" class="w-full px-5 py-2.5 rounded-xl gradient-bg text-white text-sm font-medium hover:opacity-90 transition">${t('deleteAllWeekly')} (${weeklyLessons.length + 1})</button>
+              <button onclick="Modal.close()" class="w-full px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">${t('cancel')}</button>
+            </div>
           </div>
         `, { size: 'sm' });
       }
@@ -2450,105 +1977,6 @@
       store.update('lessons', id, { status: 'scheduled' });
       Toast.success(t('lessonRestored'));
       this.render();
-    },
-    editCustomEvent(id) {
-      const ev = customEvents.find(e => e.id === id);
-      if (!ev) return;
-      Modal.open(`
-        <div class="modal-title">${t('customEvent')}</div>
-        <form onsubmit="event.preventDefault();CalendarView.saveCustomEvent('${id}')">
-          <div class="field">
-            <label>${t('title')}</label>
-            <input name="ev-title" value="${ev.title}" required>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="field">
-              <label>${t('startTime')}</label>
-              <input name="ev-start" type="time" value="${ev.startTime}" required>
-            </div>
-            <div class="field">
-              <label>${t('endTime')}</label>
-              <input name="ev-end" type="time" value="${ev.endTime}" required>
-            </div>
-          </div>
-          <div class="field">
-            <label>${t('date')}</label>
-            <input name="ev-date" type="date" value="${ev.date ? new Date(+ev.date.split('-')[0],+ev.date.split('-')[1],+ev.date.split('-')[2]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}" required>
-          </div>
-          <div class="field" style="display:flex;align-items:center;gap:8px">
-            <input type="checkbox" name="ev-recurring" id="ev-recurring" ${ev.recurring ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0">
-            <label for="ev-recurring" style="font-size:13px;text-transform:none;letter-spacing:0;margin:0">${t('repeatWeekly')}</label>
-          </div>
-          <div class="field">
-            <label>${t('evNote')}</label>
-            <textarea name="ev-note" rows="2">${ev.note || ''}</textarea>
-          </div>
-          <div style="display:flex;gap:8px;padding-top:8px">
-            <button type="submit" class="btn btn-primary" style="flex:1">${t('saveEvent')}</button>
-            <button type="button" onclick="CalendarView.deleteCustomEvent('${id}')" class="btn" style="color:var(--red);border-color:var(--red)">${t('deleteEvent')}</button>
-            <button type="button" onclick="Modal.close()" class="btn">${t('cancel')}</button>
-          </div>
-        </form>
-      `, { size: 'sm' });
-    },
-    saveCustomEvent(id) {
-      const form = document.querySelector('.modal-content form');
-      const data = Object.fromEntries(new FormData(form));
-      const dateObj = new Date(data['ev-date']);
-      const dk = dateKey(dateObj);
-      const idx = customEvents.findIndex(e => e.id === id);
-      const evData = {
-        id: id,
-        title: data['ev-title'],
-        startTime: data['ev-start'],
-        endTime: data['ev-end'],
-        date: dk,
-        recurring: data['ev-recurring'] === 'on',
-        note: data['ev-note'] || ''
-      };
-      if (idx >= 0) {
-        customEvents[idx] = evData;
-      } else {
-        customEvents.push(evData);
-      }
-      saveCustomEvents();
-      Modal.close();
-      this.render();
-    },
-    deleteCustomEvent(id) {
-      customEvents = customEvents.filter(e => e.id !== id);
-      saveCustomEvents();
-      Modal.close();
-      this.render();
-    },
-    showLessonPopup(lessonId, e) {
-      const lesson = store.getById('lessons', lessonId);
-      if (!lesson) return;
-      document.querySelectorAll('.lesson-popup').forEach(el => el.remove());
-      const st = lesson.studentId ? store.getById('students', lesson.studentId) : null;
-      const popup = document.createElement('div');
-      popup.className = 'lesson-popup';
-      const rect = e.target.getBoundingClientRect();
-      popup.style.left = Math.min(rect.right + 8, window.innerWidth - 300) + 'px';
-      popup.style.top = Math.max(rect.top, 4) + 'px';
-      const statusColors = { scheduled: 'var(--blue)', completed: 'var(--green)', cancelled: 'var(--red)', absent: 'var(--yellow)', rescheduled: 'var(--accent)' };
-      popup.innerHTML = `
-        <div class="lp-band" style="background:${statusColors[lesson.status] || 'var(--accent)'}"></div>
-        <button class="lp-close" onclick="this.parentElement.remove()">✕</button>
-        <div class="lp-body">
-          <div class="lp-title">${st ? st.name : 'Unknown'}</div>
-          <div class="lp-sub">${lesson.title || 'Lesson'}</div>
-          <div class="lp-row"><span>⏱</span><strong>${formatTime(lesson.startAt)} - ${formatTime(lesson.endAt)}</strong></div>
-          <div class="lp-row"><span>📌</span><span>${t(lesson.status)}</span></div>
-          ${lesson.description ? `<div class="lp-row" style="margin-top:4px">📝 ${lesson.description}</div>` : ''}
-          ${lesson.homework ? `<div class="lp-row">📚 ${lesson.homework}</div>` : ''}
-        </div>
-      `;
-      document.body.appendChild(popup);
-      // Remove when cursor leaves the popup OR after 3s
-      const removePopup = () => { if (popup.parentElement) popup.remove(); };
-      popup.addEventListener('mouseleave', removePopup, { once: true });
-      setTimeout(removePopup, 3000);
     }
   };
 
