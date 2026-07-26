@@ -228,7 +228,7 @@
       // Misc
       signedInAs: 'Signed in as', tutor: 'Tutor', signOut: 'Sign Out',
       signInTitle: 'Welcome to TutorPro', signInSub: 'Sign in with your Google account to manage your students, schedule, and finances.',
-      signInBtn: 'Sign in with Google',
+      signInBtn: 'Sign in with Google', confirmBtn: 'Confirm',
       debtLabel: 'Debt', moreLessons: 'more',
       mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
     },
@@ -311,7 +311,7 @@
       // Misc
       signedInAs: 'Ви увійшли як', tutor: 'Репетитор', signOut: 'Вийти',
       signInTitle: 'Ласкаво просимо до TutorPro', signInSub: 'Увійдіть через Google, щоб керувати учнями, розкладом та фінансами.',
-      signInBtn: 'Увійти через Google',
+      signInBtn: 'Увійти через Google', confirmBtn: 'Підтвердити',
       debtLabel: 'Борг', moreLessons: 'ще',
       mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Нд',
     }
@@ -524,6 +524,38 @@
     close() {
       const overlay = document.getElementById('modal-overlay');
       if (overlay) { overlay.classList.remove('active'); setTimeout(() => document.getElementById('modal-root').innerHTML = '', 200); }
+    }
+  };
+
+  // ==================== CONFIRM MODAL (replaces browser confirm()) ====================
+  const ConfirmModal = {
+    show(message, title = '') {
+      return new Promise(resolve => {
+        this._resolve = resolve;
+        Modal.open(`
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+            </div>
+            ${title ? `<h3 class="text-lg font-bold mb-2">${title}</h3>` : ''}
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">${message}</p>
+            <div class="flex gap-3 justify-center">
+              <button onclick="ConfirmModal._handle(false)" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">${t('cancel')}</button>
+              <button onclick="ConfirmModal._handle(true)" class="px-5 py-2.5 rounded-xl gradient-bg text-white text-sm font-medium hover:opacity-90 transition shadow-lg shadow-primary-500/25">${t('confirmBtn')}</button>
+            </div>
+          </div>
+        `, { size: 'sm' });
+      });
+    },
+    _handle(value) {
+      // Clear immediately (don't use Modal.close() — it has a 200ms timeout that can break chained modals)
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay) overlay.classList.remove('active');
+      document.getElementById('modal-root').innerHTML = '';
+      if (this._resolve) {
+        this._resolve(value);
+        this._resolve = null;
+      }
     }
   };
 
@@ -766,10 +798,9 @@
 
   // ==================== SIGN OUT ====================
   const signOut = () => {
-    if (confirm(t('signOut') + '?')) {
-      store.cleanup();
-      firebase.auth().signOut();
-    }
+    ConfirmModal.show(t('signOut') + '?').then(ok => {
+      if (ok) { store.cleanup(); firebase.auth().signOut(); }
+    });
   };
 
   // ==================== DASHBOARD VIEW ====================
@@ -1006,11 +1037,9 @@
       Router.navigate('students');
     },
     deleteStudent(id) {
-      if (confirm(t('deleteConfirm'))) {
-        store.delete('students', id);
-        Toast.success(t('studentDeleted'));
-        Router.navigate('students');
-      }
+      ConfirmModal.show(t('deleteConfirm')).then(ok => {
+        if (ok) { store.delete('students', id); Toast.success(t('studentDeleted')); Router.navigate('students'); }
+      });
     }
   };
 
@@ -1350,12 +1379,9 @@
       this.render();
     },
     deleteLesson(id) {
-      if (confirm(t('deleteLessonConfirm'))) {
-        store.delete('lessons', id);
-        Toast.success(t('lessonDeleted'));
-        Modal.close();
-        this.render();
-      }
+      ConfirmModal.show(t('deleteLessonConfirm')).then(ok => {
+        if (ok) { store.delete('lessons', id); Toast.success(t('lessonDeleted')); Modal.close(); this.render(); }
+      });
     }
   };
 
@@ -1434,7 +1460,9 @@
       this.render();
     },
     deletePayment(id) {
-      if (confirm(t('deletePaymentConfirm'))) { store.delete('payments', id); Toast.success(t('paymentDeleted')); this.render(); }
+      ConfirmModal.show(t('deletePaymentConfirm')).then(ok => {
+        if (ok) { store.delete('payments', id); Toast.success(t('paymentDeleted')); this.render(); }
+      });
     },
     exportCSV() {
       const payments = store.getAll('payments');
@@ -1501,7 +1529,9 @@
       this.render();
     },
     deleteMaterial(id) {
-      if (confirm(t('deleteMaterialConfirm'))) { store.delete('materials', id); Toast.success(t('materialDeleted')); this.render(); }
+      ConfirmModal.show(t('deleteMaterialConfirm')).then(ok => {
+        if (ok) { store.delete('materials', id); Toast.success(t('materialDeleted')); this.render(); }
+      });
     }
   };
 
@@ -1583,25 +1613,27 @@
       reader.readAsText(file);
     },
     clearData() {
-      if (confirm(t('clearConfirm1'))) {
-        if (confirm(t('clearConfirm2'))) {
+      ConfirmModal.show(t('clearConfirm1')).then(ok1 => {
+        if (!ok1) return;
+        ConfirmModal.show(t('clearConfirm2')).then(ok2 => {
+          if (!ok2) return;
           const batch = db.batch();
           const promises = COLLECTIONS.map(col =>
-            db.collection(col).get().then(snap => {
+            db.collection('users').doc(store._uid).collection(col).get().then(snap => {
               snap.docs.forEach(doc => batch.delete(doc.ref));
             })
           );
           Promise.all(promises).then(() => {
             batch.commit();
-            db.doc('settings/app').set({});
+            db.doc('users/' + store._uid + '/settings/app').set({});
           }).then(() => {
             COLLECTIONS.forEach(c => store._cache[c] = []);
             store._cache.settings = {};
             Toast.success(t('allDataCleared'));
             Router.navigate('dashboard');
           });
-        }
-      }
+        });
+      });
     }
   };
 
