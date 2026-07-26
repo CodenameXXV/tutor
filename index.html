@@ -116,6 +116,142 @@
     .nav-link { transition: background 0.15s, color 0.15s; }
     .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.1), rgba(0,212,255,0.1)); color: #007BFF; font-weight: 600; }
     .dark .nav-link.active { background: linear-gradient(135deg, rgba(0,123,255,0.2), rgba(0,212,255,0.2)); color: #00D4FF; }
+
+    /* ===== PAGE TRANSITIONS ===== */
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .page-enter {
+      animation: pageFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ===== STAGGER CHILDREN ===== */
+    .stagger-children > * {
+      opacity: 0;
+      animation: pageFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .stagger-children > *:nth-child(1)  { animation-delay: 0.04s; }
+    .stagger-children > *:nth-child(2)  { animation-delay: 0.08s; }
+    .stagger-children > *:nth-child(3)  { animation-delay: 0.12s; }
+    .stagger-children > *:nth-child(4)  { animation-delay: 0.16s; }
+    .stagger-children > *:nth-child(5)  { animation-delay: 0.20s; }
+    .stagger-children > *:nth-child(6)  { animation-delay: 0.24s; }
+    .stagger-children > *:nth-child(7)  { animation-delay: 0.28s; }
+    .stagger-children > *:nth-child(8)  { animation-delay: 0.32s; }
+    .stagger-children > *:nth-child(n+9){ animation-delay: 0.35s; }
+
+    /* ===== CARD HOVER LIFT ===== */
+    .card-hover {
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+      will-change: transform;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 16px 40px rgba(0, 123, 255, 0.13);
+    }
+    .dark .card-hover:hover {
+      box-shadow: 0 16px 40px rgba(0, 212, 255, 0.1);
+    }
+
+    /* ===== STAT COUNTER PULSE ===== */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px) scale(0.9); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    .stat-value {
+      animation: countUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    /* ===== SIDEBAR NAV LINK SLIDE ===== */
+    .nav-link {
+      transition: background 0.15s, color 0.15s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .nav-link:hover { transform: translateX(4px); }
+    .nav-link.active { transform: translateX(4px); }
+
+    /* ===== TAB SWITCH ===== */
+    @keyframes tabIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    #profile-tab-content > * {
+      animation: tabIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ===== STUDENT CARD RIPPLE ===== */
+    .student-card {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    }
+    .student-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0, 123, 255, 0.12);
+    }
+    .student-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,123,255,0.08) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .student-card:hover::after { opacity: 1; }
+
+    /* ===== BUTTON PRESS ===== */
+    button:not(.no-press):active {
+      transform: scale(0.96);
+      transition: transform 0.08s ease;
+    }
+
+    /* ===== FAB PULSE RING ===== */
+    @keyframes fabRing {
+      0%   { box-shadow: 0 0 0 0 rgba(0,123,255,0.35); }
+      70%  { box-shadow: 0 0 0 14px rgba(0,123,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,123,255,0); }
+    }
+    .fab { animation: fabRing 2.5s ease-out infinite; }
+    .fab:hover { animation: none; transform: scale(1.12) rotate(45deg); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+
+    /* ===== TOAST SLIDE FROM RIGHT ===== */
+    @keyframes slideIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut  { from { opacity: 1; }  to { opacity: 0; transform: translateX(30px); } }
+
+    /* ===== SKELETON SHIMMER (loading placeholder) ===== */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 8px;
+    }
+    .dark .skeleton {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 600px 100%;
+    }
+
+    /* ===== GRADIENT BORDER ON FOCUS ===== */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.35);
+      transition: box-shadow 0.2s ease;
+    }
+
+    /* ===== SCROLL REVEAL (intersection observer) ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -1210,22 +1346,22 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
             <div class="text-xs text-slate-400 mb-1">${t('todaysLessons')}</div>
-            <div class="text-3xl font-bold gradient-text">${todayLessons.length}</div>
+            <div class="text-3xl font-bold gradient-text stat-value">${todayLessons.length}</div>
             <div class="text-xs text-slate-400 mt-1">${weekLessons.length} ${t('thisWeek')}</div>
           </div>
           <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
             <div class="text-xs text-slate-400 mb-1">${t('students')}</div>
-            <div class="text-3xl font-bold gradient-text">${students.length}</div>
+            <div class="text-3xl font-bold gradient-text stat-value">${students.length}</div>
             <div class="text-xs text-slate-400 mt-1">${packages.length} ${t('activePackages')}</div>
           </div>
           <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
             <div class="text-xs text-slate-400 mb-1">${t('monthlyIncome')}</div>
-            <div class="text-3xl font-bold gradient-text">${formatCurrency(monthIncome, settings.currency)}</div>
+            <div class="text-3xl font-bold gradient-text stat-value">${formatCurrency(monthIncome, settings.currency)}</div>
             <div class="text-xs text-slate-400 mt-1">${formatCurrency(weekIncome, settings.currency)} ${t('thisWeekIncome')}</div>
           </div>
           <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
             <div class="text-xs text-slate-400 mb-1">${t('completedMonth')}</div>
-            <div class="text-3xl font-bold gradient-text">${monthCompleted}</div>
+            <div class="text-3xl font-bold gradient-text stat-value">${monthCompleted}</div>
             <div class="text-xs text-slate-400 mt-1">${monthCancelled} ${t('cancelled')}</div>
           </div>
         </div>
@@ -1546,7 +1682,7 @@
           </div>
           <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 text-center">
             <div class="text-xs text-slate-400">${t('balance')}</div>
-            <div class="text-lg font-bold ${balance < 0 ? 'text-red-500' : 'text-green-500'}">${formatCurrency(balance, settings.currency)}</div>
+            <div class="text-lg font-bold stat-value ${balance < 0 ? 'text-red-500' : 'text-green-500'}">${formatCurrency(balance, settings.currency)}</div>
           </div>
         </div>
         <!-- Tabs -->
@@ -2263,6 +2399,75 @@
     const sr = document.getElementById('search-results');
     if (sr && !e.target.closest('#global-search') && !e.target.closest('#search-results')) sr.classList.add('hidden');
   });
+
+  // ==================== ANIMATIONS ====================
+
+  // 1. Page-enter animation: запускається щоразу після рендеру контенту
+  const _origAppShellRender = AppShell.render.bind(AppShell);
+  AppShell.render = function(content) {
+    _origAppShellRender(content);
+    const page = document.getElementById('page-content');
+    if (page) {
+      page.classList.remove('page-enter');
+      void page.offsetWidth; // reflow
+      page.classList.add('page-enter');
+    }
+    initAnimations();
+  };
+
+  // 2. Mouse-glow ripple для student-card
+  document.addEventListener('mousemove', (e) => {
+    const card = e.target.closest('.student-card');
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1) + '%';
+    const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1) + '%';
+    card.style.setProperty('--mx', x);
+    card.style.setProperty('--my', y);
+  });
+
+  // 3. Scroll-reveal через IntersectionObserver
+  let revealObserver;
+  function initScrollReveal() {
+    if (revealObserver) revealObserver.disconnect();
+    revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.classList.add('visible');
+          revealObserver.unobserve(el.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  }
+
+  // 4. Stat values pop-in
+  function initStatValues() {
+    document.querySelectorAll('.stat-value').forEach(el => {
+      el.classList.remove('stat-value');
+      void el.offsetWidth;
+      el.classList.add('stat-value');
+    });
+  }
+
+  // 5. Card-hover class — додаємо до карток що ще не мають
+  function initCardHover() {
+    document.querySelectorAll(
+      '.bg-white.rounded-xl, .bg-white.rounded-2xl, .dark\\:bg-slate-800.rounded-xl'
+    ).forEach(el => {
+      if (!el.classList.contains('card-hover') && !el.closest('.no-hover')) {
+        el.classList.add('card-hover');
+      }
+    });
+  }
+
+  function initAnimations() {
+    requestAnimationFrame(() => {
+      initScrollReveal();
+      initStatValues();
+      initCardHover();
+    });
+  }
 
   // ==================== START APP (auth-gated) ====================
   document.documentElement.lang = getLang();
