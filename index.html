@@ -1551,7 +1551,7 @@
         </div>
         <!-- Tabs -->
         <div class="flex gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
-          ${tabs.map(tab => `<button onclick="StudentProfileView.activeTab='${tab}';Router.navigate('student/${id}')" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${this.activeTab === tab ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-500' : 'text-slate-500 hover:text-slate-700'}">${t(tab)}</button>`).join('')}
+          ${tabs.map(tab => `<button onclick="StudentProfileView.activeTab='${tab}';StudentProfileView.render('${id}')" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${this.activeTab === tab ? 'bg-white dark:bg-slate-700 shadow-sm text-primary-500' : 'text-slate-500 hover:text-slate-700'}">${t(tab)}</button>`).join('')}
         </div>
         <div id="profile-tab-content">${this.renderTab(id, s, packages, payments, lessons, settings)}</div>`;
       AppShell.render(content);
