@@ -138,6 +138,27 @@
     if (bday < today) bday.setFullYear(today.getFullYear() + 1);
     return Math.round((bday - today) / 86400000);
   };
+  // Helper: check if a student has payment due for a lesson
+  const needsPayment = (student, lesson) => {
+    if (!student || !student.paymentSchedule || lesson.status !== 'completed') return false;
+    const allLessons = store.getAll('lessons').filter(l => l.studentId === student.id && l.status === 'completed').sort((a,b) => new Date(a.startAt) - new Date(b.startAt));
+    const allPayments = store.getAll('payments').filter(p => p.studentId === student.id && p.status === 'paid').sort((a,b) => new Date(a.paidAt) - new Date(b.paidAt));
+    const lessonIdx = allLessons.findIndex(l => l.id === lesson.id);
+    if (lessonIdx === -1) return false;
+    // Count completed lessons after the last payment
+    const lastPaymentDate = allPayments.length ? new Date(allPayments[allPayments.length-1].paidAt) : new Date(0);
+    const lessonsSincePayment = allLessons.filter(l => new Date(l.startAt) > lastPaymentDate).length;
+    
+    if (student.paymentSchedule === 'per_lesson') return lessonsSincePayment >= 1;
+    if (student.paymentSchedule === 'daily') {
+      const lessonDate = new Date(lesson.startAt).toDateString();
+      const todayLessons = allLessons.filter(l => new Date(l.startAt).toDateString() === lessonDate && new Date(l.startAt) > lastPaymentDate);
+      return todayLessons.length >= 1;
+    }
+    if (student.paymentSchedule === 'every_n') return lessonsSincePayment >= (student.paymentInterval || 5);
+    return false;
+  };
+
   const exportCSV = (data, filename) => {
     if (!data.length) return;
     const headers = Object.keys(data[0]);
@@ -169,7 +190,8 @@
       editStudent: 'Edit Student', addStudentTitle: 'Add Student',
       name: 'Name', phone: 'Phone', email: 'Email', telegram: 'Telegram',
       level: 'Level', pricePerLesson: 'Price per lesson', dateOfBirth: 'Date of Birth',
-      learningGoal: 'Learning Goal', notes: 'Notes', select: 'Select...',
+      learningGoal: 'Learning Goal',      notes: 'Notes', select: 'Select...',
+      paymentSchedule: 'Payment Schedule', perLessonLabel: 'Per Lesson', dailyLabel: 'Daily', everyNLabel: 'Every N Lessons', interval: 'Interval (lessons)', paymentDue: 'Payment due',
       a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Update', add: 'Add', cancel: 'Cancel', save: 'Save',
       noLevel: 'No level', studentAdded: 'Student added', studentUpdated: 'Student updated', studentDeleted: 'Student deleted',
@@ -190,7 +212,7 @@
       scheduled: 'Scheduled', completed: 'Completed', cancelledStatus: 'Cancelled', rescheduled: 'Rescheduled', absent: 'Absent',
       repeatWeekly: 'Repeat weekly for', times: 'times', linkToPackage: 'Link to Package', none: 'None',
       homework: 'Homework', createLesson: 'Create Lesson', updateLesson: 'Update Lesson',
-      deleteLesson: 'Delete Lesson', deleteLessonConfirm: 'Delete this lesson?',
+      deleteLesson: 'Delete Lesson', deleteLessonConfirm: 'Delete this lesson?', deleteThisLesson: 'Delete this lesson only', deleteAllOnDay: 'Delete all lessons on this day',
       lessonCreated: 'Lesson created', lessonsCreated: 'lessons created', lessonUpdated: 'Lesson updated', lessonDeleted: 'Lesson deleted',
       lessonTopic: 'Lesson topic',
       // Payments
@@ -198,7 +220,7 @@
       totalPaid: 'Total Paid', totalDebtTitle: 'Total Debt', thisMonth: 'This Month',
       all: 'All', paid: 'Paid', partial: 'Partial', debt: 'Debt', advance: 'Advance',
       noPaymentsFound: 'No payments found', amount: 'Amount', type: 'Type', method: 'Method',
-      note: 'Note', savePayment: 'Save Payment', paymentRecorded: 'Payment recorded',
+      note: 'Note', savePayment: 'Save Payment', paymentRecorded: 'Payment recorded', markAsPaid: 'Mark as Paid',
       paymentDeleted: 'Payment deleted', deletePaymentConfirm: 'Delete this payment?',
       lesson: 'Lesson', package: 'Package', debtRepayment: 'Debt Repayment', advanceType: 'Advance',
       cash: 'Cash', card: 'Card', transfer: 'Transfer', unknown: 'Unknown',
@@ -252,7 +274,8 @@
       editStudent: 'Редагувати учня', addStudentTitle: 'Додати учня',
       name: "Ім'я", phone: 'Телефон', email: 'Пошта', telegram: 'Телеграм',
       level: 'Рівень', pricePerLesson: 'Вартість уроку', dateOfBirth: 'Дата народження',
-      learningGoal: 'Мета навчання', notes: 'Нотатки', select: 'Оберіть...',
+      learningGoal: 'Мета навчання',      notes: 'Нотатки', select: 'Оберіть...',
+      paymentSchedule: 'Графік оплати', perLessonLabel: 'За урок', dailyLabel: 'Щодня', everyNLabel: 'Кожні N уроків', interval: 'Інтервал (уроків)', paymentDue: 'Потрібна оплата',
       a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Оновити', add: 'Додати', cancel: 'Скасувати', save: 'Зберегти',
       noLevel: 'Без рівня', studentAdded: 'Учня додано', studentUpdated: 'Учня оновлено', studentDeleted: 'Учня видалено',
@@ -273,7 +296,7 @@
       scheduled: 'Заплановано', completed: 'Проведено', cancelledStatus: 'Скасовано', rescheduled: 'Перенесено', absent: 'Відсутній',
       repeatWeekly: 'Повторювати щотижня', times: 'разів', linkToPackage: "Прив'язати до пакету", none: 'Немає',
       homework: 'Домашнє завдання', createLesson: 'Створити урок', updateLesson: 'Оновити урок',
-      deleteLesson: 'Видалити урок', deleteLessonConfirm: 'Видалити цей урок?',
+      deleteLesson: 'Видалити урок', deleteLessonConfirm: 'Видалити цей урок?', deleteThisLesson: 'Видалити тільки цей урок', deleteAllOnDay: 'Видалити всі уроки за цей день',
       lessonCreated: 'Урок створено', lessonsCreated: 'уроків створено', lessonUpdated: 'Урок оновлено', lessonDeleted: 'Урок видалено',
       lessonTopic: 'Тема уроку',
       // Payments
@@ -281,7 +304,7 @@
       totalPaid: 'Всього оплачено', totalDebtTitle: 'Загальний борг', thisMonth: 'Цього місяця',
       all: 'Усі', paid: 'Оплачено', partial: 'Частково', debt: 'Борг', advance: 'Аванс',
       noPaymentsFound: 'Оплат не знайдено', amount: 'Сума', type: 'Тип', method: 'Метод',
-      note: 'Примітка', savePayment: 'Зберегти оплату', paymentRecorded: 'Оплату записано',
+      note: 'Примітка', savePayment: 'Зберегти оплату', paymentRecorded: 'Оплату записано', markAsPaid: 'Позначити оплаченим',
       paymentDeleted: 'Оплату видалено', deletePaymentConfirm: 'Видалити цю оплату?',
       lesson: 'Урок', package: 'Пакет', debtRepayment: 'Погашення боргу', advanceType: 'Аванс',
       cash: 'Готівка', card: 'Картка', transfer: 'Переказ', unknown: 'Невідомо',
@@ -335,7 +358,8 @@
       editStudent: 'Редактировать ученика', addStudentTitle: 'Добавить ученика',
       name: 'Имя', phone: 'Телефон', email: 'Почта', telegram: 'Телеграм',
       level: 'Уровень', pricePerLesson: 'Стоимость урока', dateOfBirth: 'Дата рождения',
-      learningGoal: 'Цель обучения', notes: 'Заметки', select: 'Выберите...',
+      learningGoal: 'Цель обучения',      notes: 'Заметки', select: 'Выберите...',
+      paymentSchedule: 'График оплаты', perLessonLabel: 'За урок', dailyLabel: 'Ежедневно', everyNLabel: 'Каждые N уроков', interval: 'Интервал (уроков)', paymentDue: 'Требуется оплата',
       a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Обновить', add: 'Добавить', cancel: 'Отмена', save: 'Сохранить',
       noLevel: 'Без уровня', studentAdded: 'Ученик добавлен', studentUpdated: 'Ученик обновлён', studentDeleted: 'Ученик удалён',
@@ -356,7 +380,7 @@
       scheduled: 'Запланировано', completed: 'Проведено', cancelledStatus: 'Отменено', rescheduled: 'Перенесено', absent: 'Отсутствовал',
       repeatWeekly: 'Повторять еженедельно', times: 'раз', linkToPackage: 'Привязать к пакету', none: 'Нет',
       homework: 'Домашнее задание', createLesson: 'Создать урок', updateLesson: 'Обновить урок',
-      deleteLesson: 'Удалить урок', deleteLessonConfirm: 'Удалить этот урок?',
+      deleteLesson: 'Удалить урок', deleteLessonConfirm: 'Удалить этот урок?', deleteThisLesson: 'Удалить только этот урок', deleteAllOnDay: 'Удалить все уроки за этот день',
       lessonCreated: 'Урок создан', lessonsCreated: 'уроков создано', lessonUpdated: 'Урок обновлён', lessonDeleted: 'Урок удалён',
       lessonTopic: 'Тема урока',
       // Payments
@@ -364,7 +388,7 @@
       totalPaid: 'Всего оплачено', totalDebtTitle: 'Общий долг', thisMonth: 'В этом месяце',
       all: 'Все', paid: 'Оплачено', partial: 'Частично', debt: 'Долг', advance: 'Аванс',
       noPaymentsFound: 'Оплат не найдено', amount: 'Сумма', type: 'Тип', method: 'Метод',
-      note: 'Примечание', savePayment: 'Сохранить оплату', paymentRecorded: 'Оплата записана',
+      note: 'Примечание', savePayment: 'Сохранить оплату', paymentRecorded: 'Оплата записана', markAsPaid: 'Отметить оплаченным',
       paymentDeleted: 'Оплата удалена', deletePaymentConfirm: 'Удалить эту оплату?',
       lesson: 'Урок', package: 'Пакет', debtRepayment: 'Погашение долга', advanceType: 'Аванс',
       cash: 'Наличные', card: 'Карта', transfer: 'Перевод', unknown: 'Неизвестно',
@@ -418,7 +442,8 @@
       editStudent: 'Schüler bearbeiten', addStudentTitle: 'Schüler hinzufügen',
       name: 'Name', phone: 'Telefon', email: 'E-Mail', telegram: 'Telegram',
       level: 'Niveau', pricePerLesson: 'Preis pro Unterricht', dateOfBirth: 'Geburtsdatum',
-      learningGoal: 'Lernziel', notes: 'Notizen', select: 'Auswählen...',
+      learningGoal: 'Lernziel',      notes: 'Notizen', select: 'Auswählen...',
+      paymentSchedule: 'Zahlungsplan', perLessonLabel: 'Pro Unterricht', dailyLabel: 'Täglich', everyNLabel: 'Alle N Unterrichte', interval: 'Intervall (Unterrichte)', paymentDue: 'Zahlung fällig',
       a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Aktualisieren', add: 'Hinzufügen', cancel: 'Abbrechen', save: 'Speichern',
       noLevel: 'Kein Niveau', studentAdded: 'Schüler hinzugefügt', studentUpdated: 'Schüler aktualisiert', studentDeleted: 'Schüler gelöscht',
@@ -439,7 +464,7 @@
       scheduled: 'Geplant', completed: 'Abgeschlossen', cancelledStatus: 'Storniert', rescheduled: 'Verschoben', absent: 'Abwesend',
       repeatWeekly: 'Wöchentlich wiederholen', times: 'Mal', linkToPackage: 'Mit Paket verknüpfen', none: 'Keine',
       homework: 'Hausaufgaben', createLesson: 'Unterricht erstellen', updateLesson: 'Unterricht aktualisieren',
-      deleteLesson: 'Unterricht löschen', deleteLessonConfirm: 'Diesen Unterricht löschen?',
+      deleteLesson: 'Unterricht löschen', deleteLessonConfirm: 'Diesen Unterricht löschen?', deleteThisLesson: 'Nur diesen Unterricht löschen', deleteAllOnDay: 'Alle Unterrichte an diesem Tag löschen',
       lessonCreated: 'Unterricht erstellt', lessonsCreated: 'Unterrichte erstellt', lessonUpdated: 'Unterricht aktualisiert', lessonDeleted: 'Unterricht gelöscht',
       lessonTopic: 'Unterrichtsthema',
       // Payments
@@ -447,7 +472,7 @@
       totalPaid: 'Insgesamt bezahlt', totalDebtTitle: 'Gesamtschulden', thisMonth: 'Diesen Monat',
       all: 'Alle', paid: 'Bezahlt', partial: 'Teilweise', debt: 'Schulden', advance: 'Vorauszahlung',
       noPaymentsFound: 'Keine Zahlungen gefunden', amount: 'Betrag', type: 'Typ', method: 'Methode',
-      note: 'Notiz', savePayment: 'Zahlung speichern', paymentRecorded: 'Zahlung erfasst',
+      note: 'Notiz', savePayment: 'Zahlung speichern', paymentRecorded: 'Zahlung erfasst', markAsPaid: 'Als bezahlt markieren',
       paymentDeleted: 'Zahlung gelöscht', deletePaymentConfirm: 'Diese Zahlung löschen?',
       lesson: 'Unterricht', package: 'Paket', debtRepayment: 'Schuldentilgung', advanceType: 'Vorauszahlung',
       cash: 'Bar', card: 'Karte', transfer: 'Überweisung', unknown: 'Unbekannt',
@@ -501,7 +526,8 @@
       editStudent: 'Edytuj ucznia', addStudentTitle: 'Dodaj ucznia',
       name: 'Imię', phone: 'Telefon', email: 'E-mail', telegram: 'Telegram',
       level: 'Poziom', pricePerLesson: 'Cena za lekcję', dateOfBirth: 'Data urodzenia',
-      learningGoal: 'Cel nauki', notes: 'Notatki', select: 'Wybierz...',
+      learningGoal: 'Cel nauki',      notes: 'Notatki', select: 'Wybierz...',
+      paymentSchedule: 'Harmonogram płatności', perLessonLabel: 'Za lekcję', dailyLabel: 'Codziennie', everyNLabel: 'Co N lekcji', interval: 'Interwał (lekcji)', paymentDue: 'Płatność wymagana',
       a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
       update: 'Aktualizuj', add: 'Dodaj', cancel: 'Anuluj', save: 'Zapisz',
       noLevel: 'Brak poziomu', studentAdded: 'Ucznia dodano', studentUpdated: 'Ucznia zaktualizowano', studentDeleted: 'Ucznia usunięto',
@@ -522,7 +548,7 @@
       scheduled: 'Zaplanowano', completed: 'Zrealizowano', cancelledStatus: 'Anulowano', rescheduled: 'Przełożono', absent: 'Nieobecny',
       repeatWeekly: 'Powtarzaj co tydzień', times: 'razy', linkToPackage: 'Połącz z pakietem', none: 'Brak',
       homework: 'Zadanie domowe', createLesson: 'Utwórz lekcję', updateLesson: 'Aktualizuj lekcję',
-      deleteLesson: 'Usuń lekcję', deleteLessonConfirm: 'Usunąć tę lekcję?',
+      deleteLesson: 'Usuń lekcję', deleteLessonConfirm: 'Usunąć tę lekcję?', deleteThisLesson: 'Usuń tylko tę lekcję', deleteAllOnDay: 'Usuń wszystkie lekcje z tego dnia',
       lessonCreated: 'Lekcja utworzona', lessonsCreated: 'lekcji utworzonych', lessonUpdated: 'Lekcja zaktualizowana', lessonDeleted: 'Lekcja usunięta',
       lessonTopic: 'Temat lekcji',
       // Payments
@@ -530,7 +556,7 @@
       totalPaid: 'Łącznie zapłacono', totalDebtTitle: 'Całkowity dług', thisMonth: 'W tym miesiącu',
       all: 'Wszystkie', paid: 'Zapłacono', partial: 'Częściowo', debt: 'Dług', advance: 'Zaliczka',
       noPaymentsFound: 'Nie znaleziono płatności', amount: 'Kwota', type: 'Typ', method: 'Metoda',
-      note: 'Uwaga', savePayment: 'Zapisz płatność', paymentRecorded: 'Płatność zarejestrowana',
+      note: 'Uwaga', savePayment: 'Zapisz płatność', paymentRecorded: 'Płatność zarejestrowana', markAsPaid: 'Oznacz jako zapłacone',
       paymentDeleted: 'Płatność usunięta', deletePaymentConfirm: 'Usunąć tę płatność?',
       lesson: 'Lekcja', package: 'Pakiet', debtRepayment: 'Spłata długu', advanceType: 'Zaliczka',
       cash: 'Gotówka', card: 'Karta', transfer: 'Przelew', unknown: 'Nieznany',
@@ -1274,6 +1300,11 @@
           </div>
           <div><label class="text-xs font-semibold text-slate-500">${t('learningGoal')}</label><input name="goal" value="${s ? s.goal || '' : ''}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div>
           <div><label class="text-xs font-semibold text-slate-500">${t('notes')}</label><textarea name="notes" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">${s ? s.notes || '' : ''}</textarea></div>
+          <!-- Payment Schedule -->
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs font-semibold text-slate-500">${t('paymentSchedule')}</label><select name="paymentSchedule" onchange="StudentsView.togglePaymentInterval(this.value)" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"><option value="" ${s && !s.paymentSchedule ? 'selected' : ''}>${t('select')}</option><option value="per_lesson" ${s && s.paymentSchedule === 'per_lesson' ? 'selected' : ''}>${t('perLessonLabel')}</option><option value="daily" ${s && s.paymentSchedule === 'daily' ? 'selected' : ''}>${t('dailyLabel')}</option><option value="every_n" ${s && s.paymentSchedule === 'every_n' ? 'selected' : ''}>${t('everyNLabel')}</option></select></div>
+            <div id="payment-interval-field" class="${s && s.paymentSchedule === 'every_n' ? '' : 'hidden'}"><label class="text-xs font-semibold text-slate-500">${t('interval')}</label><input name="paymentInterval" type="number" min="1" value="${s ? s.paymentInterval || 5 : 5}" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm"></div>
+          </div>
           <div class="flex gap-3 pt-2">
             <button type="submit" class="flex-1 gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${s ? t('update') : t('add')}</button>
             <button type="button" onclick="Modal.close()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm">${t('cancel')}</button>
@@ -1281,10 +1312,14 @@
         </form>
       `);
     },
+    togglePaymentInterval(val) {
+      document.getElementById('payment-interval-field').classList.toggle('hidden', val !== 'every_n');
+    },
     save(id) {
       const form = document.querySelector('.modal-content form');
       const data = Object.fromEntries(new FormData(form));
       data.pricePerLesson = Number(data.pricePerLesson) || 0;
+      data.paymentInterval = Number(data.paymentInterval) || 5;
       if (id) {
         store.update('students', id, data);
         Toast.success(t('studentUpdated'));
@@ -1502,7 +1537,8 @@
           dayLessons.forEach(l => {
             const st = students.find(s => s.id === l.studentId);
             const colors = { scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', absent: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', rescheduled: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' };
-            html += `<div class="lesson-pill ${colors[l.status] || colors.scheduled} truncate mb-0.5" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${st ? st.name : t('lesson')}</div>`;
+            const payDue = needsPayment(st, l);
+            html += `<div class="lesson-pill relative ${colors[l.status] || colors.scheduled} truncate mb-0.5 ${payDue ? 'ring-2 ring-red-400 dark:ring-red-500' : ''}" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${payDue ? '💵 ' : ''}${st ? st.name : t('lesson')}</div>`;
           });
           html += '</div>';
         }
@@ -1530,10 +1566,12 @@
         html += `<div class="flex-1 cursor-pointer" onclick="CalendarView.openForm(null, '${day.toISOString()}', ${h})">`;
         dayLessons.forEach(l => {
           const st = students.find(s => s.id === l.studentId);
-          html += `<div class="bg-primary-50 dark:bg-primary-900/20 rounded-xl p-3 mb-1 cursor-pointer border border-primary-100 dark:border-primary-800" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">
-            <div class="font-semibold text-sm">${st ? st.name : t('lesson')}</div>
+          const payDue = needsPayment(st, l);
+          html += `<div class="${payDue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800'} rounded-xl p-3 mb-1 cursor-pointer border" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">
+            <div class="font-semibold text-sm flex items-center gap-1">${payDue ? '💵' : ''} ${st ? st.name : t('lesson')}</div>
             <div class="text-xs text-slate-400">${formatTime(l.startAt)} - ${formatTime(l.endAt)} · <span class="badge badge-${l.status}">${l.status}</span></div>
             ${l.title ? `<div class="text-xs mt-1">${l.title}</div>` : ''}
+            ${payDue ? `<div class="text-[10px] text-red-500 font-medium mt-1">${t('paymentDue')}</div>` : ''}
           </div>`;
         });
         html += '</div></div>';
@@ -1558,7 +1596,8 @@
           <div class="text-xs font-semibold ${today ? 'text-primary-500' : ''}">${d}</div>
           ${dayLessons.slice(0,2).map(l => {
             const st = students.find(s => s.id === l.studentId);
-            return `<div class="lesson-pill bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 truncate mt-0.5 text-[10px]" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
+            const payDue = needsPayment(st, l);
+            return `<div class="lesson-pill relative ${payDue ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 ring-1 ring-red-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'} truncate mt-0.5 text-[10px]" onclick="event.stopPropagation();CalendarView.openForm('${l.id}')">${payDue ? '💵 ' : ''}${formatTime(l.startAt)} ${st ? st.name : ''}</div>`;
           }).join('')}
           ${dayLessons.length > 2 ? `<div class="text-[10px] text-slate-400 mt-0.5">+${dayLessons.length-2} ${t('moreLessons')}</div>` : ''}
         </div>`;
@@ -1607,6 +1646,7 @@
           <div><label class="text-xs font-semibold text-slate-500">${t('homework')}</label><textarea name="homework" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm">${lesson ? lesson.homework || '' : ''}</textarea></div>
           <div class="flex gap-3 pt-2">
             <button type="submit" class="flex-1 gradient-bg text-white py-2.5 rounded-xl font-semibold text-sm hover:opacity-90">${lesson ? t('updateLesson') : t('createLesson')}</button>
+            ${lesson ? `<button type="button" onclick="CalendarView.markAsPaid('${lesson.id}')" class="px-4 py-2.5 rounded-xl border border-emerald-200 text-emerald-600 text-sm font-medium hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20 transition">💵 ${t('markAsPaid')}</button>` : ''}
             ${lesson ? `<button type="button" onclick="CalendarView.deleteLesson('${lesson.id}')" class="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm hover:bg-red-50 dark:hover:bg-red-900/20">${t('deleteLesson')}</button>` : ''}
             <button type="button" onclick="Modal.close()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm">${t('cancel')}</button>
           </div>
@@ -1657,10 +1697,65 @@
       Modal.close();
       this.render();
     },
-    deleteLesson(id) {
-      ConfirmModal.show(t('deleteLessonConfirm')).then(ok => {
-        if (ok) { store.delete('lessons', id); Toast.success(t('lessonDeleted')); Modal.close(); this.render(); }
+    markAsPaid(lessonId) {
+      const lesson = store.getById('lessons', lessonId);
+      if (!lesson || !lesson.studentId) return;
+      const student = store.getById('students', lesson.studentId);
+      const amount = student ? Number(student.pricePerLesson) || 0 : 0;
+      store.create('payments', {
+        studentId: lesson.studentId,
+        amount: amount || 0,
+        type: 'lesson',
+        status: 'paid',
+        method: 'cash',
+        paidAt: new Date().toISOString(),
+        note: `Payment for ${lesson.title || 'lesson'} on ${formatDate(lesson.startAt)}`
       });
+      Toast.success(t('paymentRecorded'));
+      Modal.close();
+      this.render();
+    },
+    deleteLesson(id) {
+      const lesson = store.getById('lessons', id);
+      if (!lesson) return;
+      const dayStr = new Date(lesson.startAt).toDateString();
+      const dayLessons = store.getAll('lessons').filter(l => new Date(l.startAt).toDateString() === dayStr);
+      if (dayLessons.length <= 1) {
+        ConfirmModal.show(t('deleteLessonConfirm')).then(ok => {
+          if (ok) { store.delete('lessons', id); Toast.success(t('lessonDeleted')); Modal.close(); this.render(); }
+        });
+      } else {
+        Modal.open(`
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2">${t('deleteLesson')}</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">${formatDate(lesson.startAt)} — ${dayLessons.length} ${t('lessons')}</p>
+            <div class="space-y-2">
+              <button onclick="CalendarView._deleteOne('${id}')" class="w-full px-5 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 transition">${t('deleteThisLesson')}</button>
+              <button onclick="CalendarView._deleteDay('${id}')" class="w-full px-5 py-2.5 rounded-xl gradient-bg text-white text-sm font-medium hover:opacity-90 transition">${t('deleteAllOnDay')} (${dayLessons.length})</button>
+              <button onclick="Modal.close()" class="w-full px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">${t('cancel')}</button>
+            </div>
+          </div>
+        `, { size: 'sm' });
+      }
+    },
+    _deleteOne(id) {
+      store.delete('lessons', id);
+      Toast.success(t('lessonDeleted'));
+      Modal.close();
+      this.render();
+    },
+    _deleteDay(id) {
+      const lesson = store.getById('lessons', id);
+      if (!lesson) return;
+      const dayStr = new Date(lesson.startAt).toDateString();
+      const dayLessons = store.getAll('lessons').filter(l => new Date(l.startAt).toDateString() === dayStr);
+      dayLessons.forEach(l => store.delete('lessons', l.id));
+      Toast.success(t('lessonDeleted'));
+      Modal.close();
+      this.render();
     }
   };
 
