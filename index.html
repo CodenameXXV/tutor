@@ -17,29 +17,48 @@ const firebaseConfig={apiKey:"AIzaSyCmUz8VxefFAIa5SB3WlRHnSZsq1C73uAg",authDomai
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
-let _uid=null,_unsubscribe=null,_saveTimer=null;
+let _uid=null,_unsubscribe=null,_saveTimer=null,_syncing=false;
 function fbDoc(name){return doc(db,'users',_uid,'data',name);}
 async function fbLoad(){
   try{
-    const[sSnap,lSnap,srSnap]=await Promise.all([getDoc(fbDoc('students')),getDoc(fbDoc('lessons')),getDoc(fbDoc('series'))]);
+    const[sSnap,lSnap,srSnap,stSnap]=await Promise.all([getDoc(fbDoc('students')),getDoc(fbDoc('lessons')),getDoc(fbDoc('series')),getDoc(fbDoc('settings'))]);
     if(sSnap.exists()){window._tb.students=sSnap.data().v||[];}
     if(lSnap.exists()){window._tb.lessons=lSnap.data().v||[];}
     if(srSnap.exists()){window._tb.series=srSnap.data().v||[];}
+    if(stSnap.exists())window._tb.applySettings(stSnap.data().v||null);
     window._tb.afterLoad();
   }catch(e){console.error('fbLoad',e);}
 }
+function collectSettings(){
+  return {
+    theme:localStorage.getItem('tb_theme')||'light',
+    fhOverrides:localStorage.getItem('tb_fh_overrides')||'{}',
+    calView:localStorage.getItem('tb_calview')||'month'
+  };
+}
 function fbSave(students,lessons,series){
   if(!_uid)return;
+  if(!_syncing){_syncing=true;window._tb?.syncStart();}
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(async()=>{
     try{
       await Promise.all([
         setDoc(fbDoc('students'),{v:students}),
         setDoc(fbDoc('lessons'),{v:lessons}),
-        setDoc(fbDoc('series'),{v:series})
+        setDoc(fbDoc('series'),{v:series}),
+        setDoc(fbDoc('settings'),{v:collectSettings()})
       ]);
     }catch(e){console.error('fbSave',e);}
+    _syncing=false;
+    window._tb?.syncEnd();
   },800);
+}
+function fbSaveSettings(){
+  if(!_uid)return;
+  window._tb?.syncStart();
+  setDoc(fbDoc('settings'),{v:collectSettings()})
+    .catch(e=>console.error('fbSaveSettings',e))
+    .finally(()=>window._tb?.syncEnd());
 }
 onAuthStateChanged(auth,user=>{
   _uid=user?user.uid:null;
@@ -60,7 +79,8 @@ onAuthStateChanged(auth,user=>{
 window._fbAuth={
   login:()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>console.error(e)),
   logout:()=>signOut(auth),
-  save:fbSave
+  save:fbSave,
+  saveSettings:fbSaveSettings
 };
 </script>
 <style>
@@ -111,7 +131,11 @@ button{cursor:pointer;border:0;background:none}
 
 /* ---------- auth ---------- */
 #auth-av{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:13px;font-weight:600;color:#fff;overflow:hidden;position:relative;background:var(--surf3);border:1px solid var(--line);box-shadow:var(--sh1);cursor:pointer;flex-shrink:0}
-#auth-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#auth-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+/* індикатор синхронізації — обертове кільце навколо аватарки */
+#auth-av.syncing{overflow:visible}
+#auth-av.syncing::before{content:'';position:absolute;inset:-4px;border-radius:14px;border:2px dashed color-mix(in srgb,var(--ac) 65%,transparent);animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 /* ---------- header ---------- */
 .top-brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .mark{width:38px;height:38px;border-radius:11px;overflow:hidden;display:grid;place-items:center;flex-shrink:0;
@@ -120,7 +144,7 @@ button{cursor:pointer;border:0;background:none}
 .mark svg{width:22px;height:22px}
 .brand h1{font-size:16px;font-weight:600;letter-spacing:-.3px;line-height:1.15}
 .brand p{color:var(--tx2);font-size:11.5px;margin-top:0}
-.top-act-top{display:flex;gap:4px;align-items:center;flex-shrink:0;margin-right:auto}
+.top-act-top{display:flex;gap:4px;align-items:center;flex-shrink:0}
 /* єдиний розмір та анімація для кнопок у шапці */
 .top-act-top .btn-sm{height:38px;padding:0 12px;border-radius:11px}
 .top-act-top .btn-ico,
@@ -151,7 +175,7 @@ button{cursor:pointer;border:0;background:none}
 .tabbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;
   position:sticky;top:0;z-index:90;padding:12px 0;
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-.tabbar .cal-switch{margin-left:0}
+.tabbar .cal-switch{margin-left:auto}
 .tabbar .tabs{margin-left:0}
 .tabs{position:relative;display:inline-flex;gap:3px;padding:4px;background:var(--surf);
   border:1px solid var(--line);border-radius:13px;box-shadow:var(--sh1)}
@@ -270,8 +294,17 @@ button.stat:hover .go,button.stat:focus-visible .go{opacity:.7;transform:transla
 .dot{width:3.5px;height:3.5px;border-radius:50%;background:currentColor;opacity:.9}
 .day.sel .dot{background:#fff}
 .cal-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
-  font-size:11px;color:var(--tx2)}
+  font-size:11px;color:var(--tx2);padding-right:56px}
 .cal-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* Google-стиль кнопка додавання уроку */
+.cal-month{position:relative}
+.cal-add{position:absolute;right:14px;bottom:14px;width:46px;height:46px;border-radius:50%;
+  background:#1a73e8;color:#fff;border:none;cursor:pointer;display:grid;place-items:center;
+  z-index:3;transition:transform .18s,background .2s}
+.cal-add:hover{transform:translateY(-2px) scale(1.05)}
+.cal-add:active{transform:scale(.94)}
+.cal-add svg{pointer-events:none}
+[data-theme=dark] .cal-add{background:#4285f4}
 
 /* ---------- lessons ---------- */
 .day-head{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
@@ -543,20 +576,20 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
 }
 @media(max-width:560px){
   body{padding:16px 13px 60px}
-  .tabbar{gap:6px;padding:10px 0;margin-bottom:10px}
+  .tabbar{gap:6px;padding:10px 0;margin-bottom:10px;position:static}
   /* компактний шапковий рядок: бренд + дії */
   .top-brand{gap:7px}
   .mark{width:30px;height:30px;border-radius:9px}
   .brand h1{font-size:14.5px}
   .brand p{display:none}
-  .top-act-top{margin-left:auto;gap:6px}
+  .top-act-top{gap:6px}
   .top-act-top .btn-ico,
   .top-act-top #auth-av{width:34px;height:34px}
   .top-act-top .btn-sm{height:34px;padding:0 10px}
   /* вкладки розділів зверху, перемикач календаря під ними */
   .cal-switch{width:100%;order:99}
   .cal-seg{flex:1;justify-content:center;padding:7px 8px}
-  .tabs{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+  .tabs{width:100%;display:grid;grid-template-columns:repeat(3,1fr);order:3}
   .tab{padding:8px;text-align:center}
   .pay-sum{grid-template-columns:1fr}
   .row2{grid-template-columns:1fr}
@@ -592,13 +625,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
     </div>
     <div class="top-act-top">
       <span id="auth-av" data-auth="in" title="Увійти" aria-label="Акаунт">👤</span>
-      <button class="btn-ico" id="theme" title="Змінити тему" aria-label="Змінити тему">◐</button>
-      <button class="btn btn-soft btn-sm" data-open="student">＋ Учень</button>
-      <button class="btn btn-sm" style="background:var(--acs);color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 55%,transparent)" data-open="lesson">＋ Урок</button>
-    </div>
-    <div class="cal-switch" id="cal-switch" role="tablist" aria-label="Вигляд календаря">
-      <button class="cal-seg on" id="view-month" role="tab" aria-selected="true">▦ Місяць</button>
-      <button class="cal-seg" id="view-week" role="tab" aria-selected="false">▤ Тиждень</button>
     </div>
     <div class="tabs" role="tablist" aria-label="Розділи">
       <span class="pill" id="pill" aria-hidden="true"></span>
@@ -606,10 +632,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
       <button class="tab on" role="tab" data-tab="schedule" aria-controls="v-schedule" aria-selected="true">Розклад</button>
       <button class="tab" role="tab" data-tab="payments" aria-controls="v-payments">Оплати</button>
     </div>
+    <div class="cal-switch" id="cal-switch" role="tablist" aria-label="Вигляд календаря">
+      <button class="cal-seg on" id="view-month" role="tab" aria-selected="true">▦ Місяць</button>
+      <button class="cal-seg" id="view-week" role="tab" aria-selected="false">▤ Тиждень</button>
+    </div>
   </div>
 
   <section class="view" id="v-students" role="tabpanel" aria-label="Учні">
     <div class="card" style="min-height: 480px; display: flex; flex-direction: column;">
+      <div class="card-h" style="margin-bottom:12px">
+        <h2>Учні</h2>
+        <button class="btn btn-sm" style="margin-left:auto" data-open="student">＋ Додати учня</button>
+      </div>
       <div class="s-grid" id="s-grid"></div>
     </div>
   </section>
@@ -630,6 +664,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
           <span><i style="box-shadow:inset 0 0 0 1.5px var(--ac)"></i>Сьогодні</span>
           <span><i style="background:var(--ac)"></i>Обрано</span>
         </div>
+        <button class="cal-add" data-open="lesson" aria-label="Додати урок" title="Додати урок"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg></button>
       </div>
       <div class="card cal-week">
         <div class="wk-top">
@@ -732,8 +767,27 @@ function save(){
 }
 
 /* bridge for Firebase module */
+let _syncCount=0;
 window._tb={
   students,lessons,series,
+  syncStart(){
+    _syncCount++;
+    const av=document.getElementById('auth-av');
+    if(av)av.classList.add('syncing');
+  },
+  syncEnd(){
+    _syncCount=Math.max(0,_syncCount-1);
+    if(!_syncCount){
+      const av=document.getElementById('auth-av');
+      if(av)av.classList.remove('syncing');
+    }
+  },
+  applySettings(st){
+    if(!st)return;
+    if(st.theme){try{localStorage.setItem('tb_theme',st.theme);}catch{}applyTheme(st.theme);}
+    if(st.fhOverrides){try{localStorage.setItem('tb_fh_overrides',st.fhOverrides);}catch{}}
+    if(st.calView){applyCalView(st.calView);}
+  },
   afterLoad(){
     students=window._tb.students;
     lessons=window._tb.lessons;
@@ -838,17 +892,14 @@ function legacyCopy(text){
 }
 
 /* ---------- theme ---------- */
-const applyTheme=t=>{
-  document.documentElement.dataset.theme=t;
-  $('#theme').textContent=t==='dark'?'☀':'◐';
-};
-applyTheme(localStorage.getItem('tb_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+const applyTheme=t=>{document.documentElement.dataset.theme=t;};
+applyTheme(localStorage.getItem('tb_theme')||'light');
 function toggleTheme(){
   const t=document.documentElement.dataset.theme==='dark'?'light':'dark';
   applyTheme(t);
   try{localStorage.setItem('tb_theme',t);}catch{}
+  window._fbAuth?.saveSettings?.();
 }
-$('#theme').onclick=toggleTheme;
 
 /* ---------- stats ---------- */
 function renderStats(){
@@ -1020,6 +1071,7 @@ function freeHoursSheet(){
 
   function saveOverrides(){
     try{localStorage.setItem('tb_fh_overrides',JSON.stringify(overrides));}catch{}
+    window._fbAuth?.saveSettings?.();
   }
 
   function isDefaultBusy(pnIdx,hStr){
@@ -1277,8 +1329,7 @@ function renderStudents(){
   const el=$('#s-grid');
   if(!students.length){
     el.innerHTML=`<div class="card empty"><div class="ic">☺</div><b>Ще немає учнів</b>
-      <p>Додайте першого учня, щоб почати вести розклад та оплати.</p>
-      <button class="btn btn-sm" data-open="student" style="margin-top:14px">＋ Новий учень</button></div>`;
+      <p>Додайте першого учня, щоб почати вести розклад та оплати.</p></div>`;
     return;
   }
   el.innerHTML=students.map((s,i)=>{
@@ -1472,6 +1523,7 @@ function applyCalView(v){
     b.setAttribute('aria-selected',on);
   });
   try{localStorage.setItem('tb_calview',calView);}catch{}
+  window._fbAuth?.saveSettings?.();
 }
 
 function switchTab(name){
@@ -1983,6 +2035,18 @@ addEventListener('contextmenu',e=>{
   else if(scard)cfg=menuStudent(+scard.dataset.student);
   else if(day)cfg=menuDay(day.dataset.date);
   else if(wcol)cfg=menuDay(wcol.dataset.weekDay);
+  else if(e.target.closest('#v-students'))cfg={head:'<span class="nm">Учні</span>',items:[
+    {label:'Додати учня',ico:'＋',fn:()=>studentForm()},
+    {label:'Додати урок',ico:'◷',fn:()=>lessonForm(picked)},
+    {sep:1},
+    {label:'Вільні години',ico:'▦',fn:freeHoursSheet}
+  ]};
+  else if(e.target.closest('#v-schedule'))cfg={head:'<span class="nm">Розклад</span>',items:[
+    {label:'Додати урок на обраний день',ico:'＋',fn:()=>lessonForm(picked)},
+    {label:'Перейти до сьогодні',ico:'◈',fn:goToday},
+    {sep:1},
+    {label:'Вільні години',ico:'▦',fn:freeHoursSheet}
+  ]};
   if(!cfg)return;
   e.preventDefault();
   openCtx(e.clientX,e.clientY,cfg.head,cfg.items);
@@ -2062,7 +2126,7 @@ function resetAllSettings(){
     'Скинути',()=>{
       students=[];lessons=[];series=[];
       try{localStorage.clear();}catch{}
-      applyTheme(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+      applyTheme('light');
       try{localStorage.setItem('tb_theme',document.documentElement.dataset.theme);}catch{}
       calView='month';
       applyCalView('month');
@@ -2134,7 +2198,7 @@ document.addEventListener('click',e=>{
   const lsn=hit('.lsn[data-lesson]');
   if(lsn)return lessonDetails(Number(lsn.dataset.lesson));
 
-  if(hit('[data-close]')||t===$('#ov'))return closeSheet();
+  if(hit('[data-close]'))return closeSheet();
 });
 
 document.addEventListener('keydown',e=>{
