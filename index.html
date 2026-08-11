@@ -49,10 +49,11 @@ onAuthStateChanged(auth,user=>{
       av.innerHTML=user.photoURL?`<img src="${user.photoURL}" alt="" onerror="this.remove()">`:(user.displayName||'?')[0].toUpperCase();
       av.style.background='var(--ac)';
       av.title=user.displayName||user.email||'';
+      av.dataset.auth='out';
     }
     fbLoad();
   }else{
-    if(av){av.innerHTML='👤';av.style.background='var(--surf3)';av.title='Увійти';}
+    if(av){av.innerHTML='👤';av.style.background='var(--surf3)';av.title='Увійти';av.dataset.auth='in';}
     window._tb?.afterLoad();
   }
 });
@@ -590,7 +591,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
       </div>
     </div>
     <div class="top-act-top">
-      <span id="auth-av" title="Увійти" aria-label="Акаунт">👤</span>
+      <span id="auth-av" data-auth="in" title="Увійти" aria-label="Акаунт">👤</span>
       <button class="btn-ico" id="theme" title="Змінити тему" aria-label="Змінити тему">◐</button>
       <button class="btn btn-soft btn-sm" data-open="student">＋ Учень</button>
       <button class="btn btn-sm" style="background:var(--acs);color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 55%,transparent)" data-open="lesson">＋ Урок</button>
@@ -2031,8 +2032,8 @@ document.addEventListener('click',e=>{
 
   const authAv=hit('#auth-av');
   if(authAv){
-    if(!_uid)window._fbAuth?.login();
-    else if(confirm('Вийти з акаунту?'))window._fbAuth?.logout();
+    if(authAv.dataset.auth==='in')window._fbAuth?.login();
+    else confirmSheet('Вийти з акаунту?','Ваші дані збережені у хмарі.','Вийти',()=>window._fbAuth?.logout());
     return;
   }
 
