@@ -843,11 +843,12 @@ const applyTheme=t=>{
   $('#theme').textContent=t==='dark'?'☀':'◐';
 };
 applyTheme(localStorage.getItem('tb_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
-$('#theme').onclick=()=>{
+function toggleTheme(){
   const t=document.documentElement.dataset.theme==='dark'?'light':'dark';
   applyTheme(t);
   try{localStorage.setItem('tb_theme',t);}catch{}
-};
+}
+$('#theme').onclick=toggleTheme;
 
 /* ---------- stats ---------- */
 function renderStats(){
@@ -1009,6 +1010,9 @@ function freeHoursSheet(){
     if(!busyMap.has(pnIdx))busyMap.set(pnIdx,new Set());
     if(l.time)busyMap.get(pnIdx).add(l.time);
   });
+  // колонки :30 показуємо лише якщо в розкладі є уроки, що починаються о :30
+  const halfTimes=new Set();
+  busyMap.forEach(ts=>ts.forEach(t=>{if(t.endsWith(':30'))halfTimes.add(t);}));
 
   // кастомні оверайди: зберігаємо в localStorage як об'єкт {`pnIdx,HH:MM`: 'free'|'busy'}
   let overrides={};
@@ -1043,8 +1047,9 @@ function freeHoursSheet(){
   }
 
   function buildGrid(){
-    const colCount=HOURS.length;
-    const hourHeads=HOURS.map(h=>`<div class="fh-time-head">${h.endsWith(':00')?h.slice(0,2):':30'}</div>`).join('');
+    const cols=HOURS.filter(h=>h.endsWith(':00')||halfTimes.has(h));
+    const colCount=cols.length;
+    const hourHeads=cols.map(h=>`<div class="fh-time-head">${esc(h)}</div>`).join('');
 
     let html=`<div class="fh-grid" id="fh-grid" style="grid-template-columns:36px repeat(${colCount},40px)">`;
     html+=`<div></div>${hourHeads}`;
@@ -1052,7 +1057,7 @@ function freeHoursSheet(){
     for(let pnIdx=0;pnIdx<7;pnIdx++){
       const isWknd=pnIdx>=5;
       html+=`<div class="fh-wd${pnIdx===todayWdPn?' today-col':''}${isWknd?' fh-wknd':''}">${WDS_SHORT[pnIdx]}</div>`;
-      for(const hStr of HOURS){
+      for(const hStr of cols){
         const key=`${pnIdx},${hStr}`;
         const ov=overrides[key];
         const free=slotFree(pnIdx,hStr);
@@ -1898,7 +1903,7 @@ function closeCtx(){
   setTimeout(()=>{if(!ctxOpen)ctxEl.innerHTML='';},170);
 }
 
-function openCtx(x,y,head,items){
+function openCtx(x,y,head,items,anchor){
   const rows=items.map(it=>it.sep
     ? '<div class="ctx-sep"></div>'
     : `<button class="ctx-item${it.danger?' danger':''}" role="menuitem"><span class="ci">${it.ico||''}</span><span>${esc(it.label)}</span></button>`
@@ -1913,8 +1918,14 @@ function openCtx(x,y,head,items){
   ctxEl.setAttribute('aria-hidden','false');
   ctxOpen=true;
   const pad=8,w=ctxEl.offsetWidth,h=ctxEl.offsetHeight;
-  ctxEl.style.left=Math.max(pad,Math.min(x,innerWidth-w-pad))+'px';
-  ctxEl.style.top=Math.max(pad,Math.min(y,innerHeight-h-pad))+'px';
+  if(anchor){
+    const r=anchor.getBoundingClientRect();
+    ctxEl.style.left=Math.max(pad,Math.min(r.right-w,innerWidth-w-pad))+'px';
+    ctxEl.style.top=Math.max(pad,Math.min(r.bottom+6,innerHeight-h-pad))+'px';
+  }else{
+    ctxEl.style.left=Math.max(pad,Math.min(x,innerWidth-w-pad))+'px';
+    ctxEl.style.top=Math.max(pad,Math.min(y,innerHeight-h-pad))+'px';
+  }
 }
 
 const ctxHeadStudent=s=>`${avatar(s,'av-sm')}<span class="nm">${esc(s.name)}</span>`;
@@ -2026,14 +2037,48 @@ document.addEventListener('drop',e=>{
   if(moveLessonTo(l,nd)==='same')toast('Урок уже на цій даті',1);
 });
 
+/* ---------- account menu ---------- */
+function accountMenu(av){
+  const loggedIn=av.dataset.auth==='out';
+  const isDark=document.documentElement.dataset.theme==='dark';
+  const head=loggedIn&&av.title?`<span class="nm">${esc(av.title)}</span>`:null;
+  openCtx(0,0,head,[
+    {ico:loggedIn?'🚪':'👤',label:loggedIn?'Вийти':'Увійти',fn:()=>{
+      if(loggedIn)confirmSheet('Вийти з акаунту?','Ваші дані збережені у хмарі.','Вийти',()=>window._fbAuth?.logout());
+      else window._fbAuth?.login();
+    }},
+    {ico:isDark?'☀':'◐',label:isDark?'Світла тема':'Темна тема',fn:toggleTheme},
+    {sep:1},
+    {ico:'⟲',label:'Скинути всі налаштування',danger:1,fn:resetAllSettings}
+  ],av);
+}
+
+function resetAllSettings(){
+  const loggedIn=document.getElementById('auth-av').dataset.auth==='out';
+  confirmSheet('Скинути всі налаштування?',
+    loggedIn
+      ?'Буде видалено всі дані та налаштування — з цього пристрою та з вашого акаунта. Дію неможливо скасувати.'
+      :'Буде видалено всі дані та налаштування на цьому пристрої. Дію неможливо скасувати.',
+    'Скинути',()=>{
+      students=[];lessons=[];series=[];
+      try{localStorage.clear();}catch{}
+      applyTheme(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+      try{localStorage.setItem('tb_theme',document.documentElement.dataset.theme);}catch{}
+      calView='month';
+      applyCalView('month');
+      save();
+      render();
+      toast('Все скинуто');
+    });
+}
+
 document.addEventListener('click',e=>{
   const t=e.target;
   const hit=sel=>t.closest(sel);
 
   const authAv=hit('#auth-av');
   if(authAv){
-    if(authAv.dataset.auth==='in')window._fbAuth?.login();
-    else confirmSheet('Вийти з акаунту?','Ваші дані збережені у хмарі.','Вийти',()=>window._fbAuth?.logout());
+    accountMenu(authAv);
     return;
   }
 
