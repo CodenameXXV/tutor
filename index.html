@@ -613,12 +613,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
 </style>
 <style id="tb-enhancement-style">
 :root{--tb-ease:cubic-bezier(.23,1,.32,1);--tb-focus:0 0 0 3px color-mix(in srgb,var(--ac) 25%,transparent)}
-.tb-sync-status{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:700;color:var(--tx2);background:var(--surf2);white-space:nowrap}.tb-sync-status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--tx3)}.tb-sync-status[data-tone=ok]{color:var(--ok);background:var(--oks)}.tb-sync-status[data-tone=ok]::before{background:var(--ok)}.tb-sync-status[data-tone=pending],.tb-sync-status[data-tone=warning]{color:var(--wa);background:var(--was)}.tb-sync-status[data-tone=pending]::before{background:var(--wa);animation:tb-pulse 1.1s infinite}.tb-sync-status[data-tone=warning]::before{background:var(--wa)}
 .tb-tools-trigger{white-space:nowrap}.tb-tools-panel{position:fixed;z-index:120;top:76px;right:max(16px,calc((100vw - 1060px)/2));width:min(420px,calc(100vw - 28px));padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--surf);box-shadow:var(--sh3);animation:tb-pop .18s var(--tb-ease);color:var(--tx)}.tb-tools-panel[hidden]{display:none}.tb-tools-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.tb-tools-head h2{font-size:17px}.tb-tools-head p{margin-top:4px;color:var(--tx2);font-size:12px;line-height:1.4}.tb-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tb-tools-grid .btn{min-height:42px;white-space:normal}.tb-tools-note{margin-top:13px;font-size:11px;line-height:1.45;color:var(--tx3)}
 .tb-status-badge{display:inline-flex;align-items:center;align-self:flex-start;width:max-content;margin-top:5px;padding:3px 7px;border-radius:999px;background:var(--surf3);color:var(--tx2);font-size:10px;font-weight:800;line-height:1.1}.tb-status-badge[data-tone=ok]{background:var(--oks);color:var(--ok)}.tb-status-badge[data-tone=warning]{background:var(--was);color:var(--wa)}.tb-status-badge[data-tone=danger]{background:var(--das);color:var(--da)}.tb-status-control{margin-top:12px}.tb-history{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.tb-history h3{font-size:13px;margin-bottom:10px}.tb-history-list{display:flex;flex-direction:column;gap:7px}.tb-history-row{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:10px;background:var(--surf2)}.tb-history-row strong{font-size:11px;color:var(--tx)}.tb-history-row span,.tb-history-empty,.tb-history-more{font-size:11px;color:var(--tx2);line-height:1.4}.tb-history-more{margin-top:8px;color:var(--tx3)}
 .tb-toast{border-left:3px solid var(--ac)}.tb-toast-ok{border-left-color:var(--ok)}.tb-toast-warning{border-left-color:var(--wa)}.tb-toast-danger{border-left-color:var(--da)}
-@keyframes tb-pulse{50%{opacity:.35;transform:scale(.72)}}@keyframes tb-pop{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}:focus-visible{outline:none;box-shadow:var(--tb-focus)}
-@media(max-width:620px){.tb-sync-status{order:3;width:100%;justify-content:center}.tb-tools-panel{top:64px;right:14px}.tb-tools-grid{grid-template-columns:1fr}}@media(max-width:420px){.tb-tools-panel{right:10px;width:calc(100vw - 20px)}.tb-sync-status{font-size:10px}}@media(prefers-reduced-motion:reduce){.tb-tools-panel,.tb-sync-status::before{animation:none!important;transition:none!important}}
+@keyframes tb-pop{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}:focus-visible{outline:none;box-shadow:var(--tb-focus)}
+@media(max-width:620px){.tb-tools-panel{top:64px;right:14px}.tb-tools-grid{grid-template-columns:1fr}}@media(max-width:420px){.tb-tools-panel{right:10px;width:calc(100vw - 20px)}}@media(prefers-reduced-motion:reduce){.tb-tools-panel{animation:none!important;transition:none!important}}
 </style></head>
 <body>
 <div class="wrap">
@@ -2277,7 +2276,7 @@ document.fonts?.ready.then(movePill);
     rescheduled: { label: 'Перенесено', tone: 'warning' },
     'no-show': { label: 'Неявка', tone: 'danger' },
   };
-  const refs = { lastFocus: null, observer: null, syncPatched: false, modalOpen: false };
+  const refs = { lastFocus: null, observer: null, modalOpen: false };
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -2445,42 +2444,6 @@ document.fonts?.ready.then(movePill);
     }
   }
 
-  function setSyncStatus(text, tone = 'neutral') {
-    const el = $('#tb-sync-status');
-    if (!el) return;
-    el.textContent = text;
-    el.dataset.tone = tone;
-    el.title = text;
-  }
-
-  function patchSync() {
-    const a = app();
-    if (!a || refs.syncPatched) return;
-    refs.syncPatched = true;
-    const originalStart = a.syncStart;
-    const originalEnd = a.syncEnd;
-    if (typeof originalStart === 'function') {
-      a.syncStart = (...args) => {
-        setSyncStatus(navigator.onLine ? 'Синхронізація…' : 'Офлайн', navigator.onLine ? 'pending' : 'warning');
-        return originalStart.apply(a, args);
-      };
-    }
-    if (typeof originalEnd === 'function') {
-      a.syncEnd = (...args) => {
-        setSyncStatus(navigator.onLine ? 'Синхронізовано' : 'Офлайн', navigator.onLine ? 'ok' : 'warning');
-        return originalEnd.apply(a, args);
-      };
-    }
-    if (typeof a.save === 'function') {
-      const originalSave = a.save;
-      a.save = (...args) => {
-        setSyncStatus(navigator.onLine ? 'Зміни збережено' : 'Збережено офлайн', navigator.onLine ? 'ok' : 'warning');
-        return originalSave.apply(a, args);
-      };
-    }
-    setSyncStatus(navigator.onLine ? 'Готово до синхронізації' : 'Офлайн', navigator.onLine ? 'neutral' : 'warning');
-  }
-
   function createTools(){
   const host=$('.top-act-top')||$('.tabbar')||$('.wrap');
   if(!host||$('#tb-tools-open'))return;
@@ -2503,16 +2466,6 @@ document.fonts?.ready.then(movePill);
     event.target.value='';
   });
 }
-function createSyncStatus() {
-    const host = $('.top-act-top') || $('.tabbar');
-    if (!host || $('#tb-sync-status')) return;
-    const status = document.createElement('span');
-    status.id = 'tb-sync-status';
-    status.className = 'tb-sync-status';
-    status.setAttribute('role', 'status');
-    status.textContent = navigator.onLine ? 'Готово' : 'Офлайн';
-    host.appendChild(status);
-  }
 
   function statusLabel(status) {
     return STATUS[status]?.label || STATUS.scheduled.label;
@@ -2634,7 +2587,6 @@ function createSyncStatus() {
 
   function registerObservers() {
     refs.observer = new MutationObserver(() => {
-      createSyncStatus();
       createTools();
 applyFieldSemantics();
       addStatusBadges();
@@ -2644,14 +2596,10 @@ applyFieldSemantics();
   }
 
   function boot() {
-    createSyncStatus();
     createTools();
 applyFieldSemantics();
     addStatusBadges();
-    patchSync();
     registerObservers();
-    window.addEventListener('online', () => setSyncStatus('Онлайн', 'ok'));
-    window.addEventListener('offline', () => setSyncStatus('Офлайн', 'warning'));
     document.addEventListener('click', trackModalFocus, true);
     document.addEventListener('click', validateBeforeSave, true);
     document.addEventListener('keydown', focusTrap, true);
