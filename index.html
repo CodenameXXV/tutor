@@ -614,7 +614,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;appearance
 <style id="tb-enhancement-style">
 :root{--tb-ease:cubic-bezier(.23,1,.32,1);--tb-focus:0 0 0 3px color-mix(in srgb,var(--ac) 25%,transparent)}
 .tb-tools-trigger{white-space:nowrap}.tb-tools-panel{position:fixed;z-index:120;top:76px;right:max(16px,calc((100vw - 1060px)/2));width:min(420px,calc(100vw - 28px));padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--surf);box-shadow:var(--sh3);animation:tb-pop .18s var(--tb-ease);color:var(--tx)}.tb-tools-panel[hidden]{display:none}.tb-tools-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.tb-tools-head h2{font-size:17px}.tb-tools-head p{margin-top:4px;color:var(--tx2);font-size:12px;line-height:1.4}.tb-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tb-tools-grid .btn{min-height:42px;white-space:normal}.tb-tools-note{margin-top:13px;font-size:11px;line-height:1.45;color:var(--tx3)}
-.tb-status-badge{display:inline-flex;align-items:center;align-self:flex-start;width:max-content;margin-top:5px;padding:3px 7px;border-radius:999px;background:var(--surf3);color:var(--tx2);font-size:10px;font-weight:800;line-height:1.1}.tb-status-badge[data-tone=ok]{background:var(--oks);color:var(--ok)}.tb-status-badge[data-tone=warning]{background:var(--was);color:var(--wa)}.tb-status-badge[data-tone=danger]{background:var(--das);color:var(--da)}.tb-status-control{margin-top:12px}.tb-history{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.tb-history h3{font-size:13px;margin-bottom:10px}.tb-history-list{display:flex;flex-direction:column;gap:7px}.tb-history-row{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:10px;background:var(--surf2)}.tb-history-row strong{font-size:11px;color:var(--tx)}.tb-history-row span,.tb-history-empty,.tb-history-more{font-size:11px;color:var(--tx2);line-height:1.4}.tb-history-more{margin-top:8px;color:var(--tx3)}
+.tb-status-control{margin-top:12px}.tb-history{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.tb-history h3{font-size:13px;margin-bottom:10px}.tb-history-list{display:flex;flex-direction:column;gap:7px}.tb-history-row{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:10px;background:var(--surf2)}.tb-history-row strong{font-size:11px;color:var(--tx)}.tb-history-row span,.tb-history-empty,.tb-history-more{font-size:11px;color:var(--tx2);line-height:1.4}.tb-history-more{margin-top:8px;color:var(--tx3)}
 .tb-toast{border-left:3px solid var(--ac)}.tb-toast-ok{border-left-color:var(--ok)}.tb-toast-warning{border-left-color:var(--wa)}.tb-toast-danger{border-left-color:var(--da)}
 @keyframes tb-pop{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}:focus-visible{outline:none;box-shadow:var(--tb-focus)}
 @media(max-width:620px){.tb-tools-panel{top:64px;right:14px}.tb-tools-grid{grid-template-columns:1fr}}@media(max-width:420px){.tb-tools-panel{right:10px;width:calc(100vw - 20px)}}@media(prefers-reduced-motion:reduce){.tb-tools-panel{animation:none!important;transition:none!important}}
@@ -2471,23 +2471,6 @@ document.fonts?.ready.then(movePill);
     return STATUS[status]?.label || STATUS.scheduled.label;
   }
 
-  function updateStatusBadge(badge, status) {
-    badge.textContent = statusLabel(status);
-    badge.dataset.tone = STATUS[status]?.tone || 'neutral';
-  }
-
-  function addStatusBadges() {
-    $$('.lsn[data-lesson], .wk-lsn[data-lesson]').forEach((card) => {
-      const id = card.dataset.lesson;
-      if (!id || card.querySelector(`[data-tb-status-for="${CSS.escape(String(id))}"]`)) return;
-      const badge = document.createElement('span');
-      badge.className = 'tb-status-badge';
-      badge.dataset.tbStatusFor = String(id);
-      updateStatusBadge(badge, lessonById(id)?.status || 'scheduled');
-      card.appendChild(badge);
-    });
-  }
-
   function addStatusControl(lessonId) {
     const lesson = lessonById(lessonId);
     const sheet = $('#sheet-in');
@@ -2504,7 +2487,6 @@ document.fonts?.ready.then(movePill);
         lesson.status = nextStatus;
         localStorage.setItem('tb_lessons', JSON.stringify(data().lessons));
         if (app()?.save) app().save(data().students, data().lessons, data().series);
-        updateStatusBadge(document.querySelector(`[data-tb-status-for="${CSS.escape(String(lesson.id))}"]`), nextStatus);
         showToast(`Статус змінено: ${statusLabel(nextStatus)}`, 'ok');
       });
     }
@@ -2589,7 +2571,6 @@ document.fonts?.ready.then(movePill);
     refs.observer = new MutationObserver(() => {
       createTools();
 applyFieldSemantics();
-      addStatusBadges();
       manageModalFocus();
     });
     refs.observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
@@ -2598,7 +2579,6 @@ applyFieldSemantics();
   function boot() {
     createTools();
 applyFieldSemantics();
-    addStatusBadges();
     registerObservers();
     document.addEventListener('click', trackModalFocus, true);
     document.addEventListener('click', validateBeforeSave, true);
